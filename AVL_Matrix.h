@@ -20,8 +20,10 @@ typedef struct AVLMatrix{
 } AVLMatrix;
 
 float get_element_avl(AVLMatrix* matrix, int i, int j);
+void insert_element_avl(AVLMatrix* matrix, float value, int i, int j);
 int delete_element_avl(AVLMatrix* matrix, int i, int j);
 void transpose_avl(AVLMatrix* matrix);
 void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C);
 void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, int a);
 void matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C);
+void free_matrix_avl(AVLMatrix* matrix);
