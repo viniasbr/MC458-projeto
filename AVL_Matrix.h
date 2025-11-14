@@ -1,3 +1,5 @@
+#pragma once
+
 typedef struct InnerNode{
     int key;
     float data;
