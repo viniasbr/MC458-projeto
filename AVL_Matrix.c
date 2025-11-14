@@ -75,10 +75,10 @@ InnerNode* _find_node_i(InnerNode* tree, int search_key){
         return tree;
     }
     if(tree -> key < search_key){
-        return _find_node_i(tree -> left, search_key);
+        return _find_node_i(tree -> right, search_key);
     }
     else{
-        return _find_node_i(tree -> right, search_key);
+        return _find_node_i(tree -> left, search_key);
     }
 }
 
@@ -90,10 +90,10 @@ OuterNode* _find_node_o(OuterNode* tree, int search_key){
         return tree;
     }
     if(tree -> key < search_key){
-        return _find_node_o(tree -> left, search_key);
+        return _find_node_o(tree -> right, search_key);
     }
     else{
-        return _find_node_o(tree -> right, search_key);
+        return _find_node_o(tree -> left, search_key);
     }
 }
 
@@ -113,10 +113,10 @@ InnerNode* _insert_i(InnerNode* tree, int insert_key, float value){
         return tree;
     }
     if(tree->key < insert_key){
-        tree -> left = _insert_i(tree->left, insert_key, value);
+        tree -> right = _insert_i(tree->right, insert_key, value);
     }
     if(tree->key > insert_key){
-        tree -> right = _insert_i(tree->right, insert_key, value);
+        tree -> left = _insert_i(tree->left, insert_key, value);
     }
 
     tree->height = 1 + _max(_height_i(tree->left), _height_i(tree->right));
@@ -164,10 +164,10 @@ OuterNode* _insert_o(OuterNode* tree, int insert_key, InnerNode* inner_tree){
         return tree;
     }
     if(tree->key < insert_key){
-        tree -> left = _insert_o(tree->left, insert_key, inner_tree);
+        tree -> right = _insert_o(tree->right, insert_key, inner_tree);
     }
     if(tree->key > insert_key){
-        tree -> right = _insert_o(tree->right, insert_key, inner_tree);
+        tree -> left = _insert_o(tree->left, insert_key, inner_tree);
     }
 
     tree -> height = 1 + _max(_height_o(tree -> left), _height_o(tree -> right));
@@ -197,6 +197,149 @@ OuterNode* _insert_o(OuterNode* tree, int insert_key, InnerNode* inner_tree){
 
     return tree;
 
+}
+InnerNode * _find_max_i (InnerNode * tree){
+    if(tree == NULL){
+        return NULL;
+    }
+    if(tree -> right == NULL){
+        return tree;
+    }
+    return _find_max_i(tree -> right);
+}
+
+OuterNode * _find_max_o (OuterNode * tree){
+    if(tree == NULL){
+        return NULL;
+    }
+    if(tree -> right == NULL){
+        return tree;
+    }
+    return _find_max_o(tree -> right);
+}
+
+InnerNode * _remove_i(InnerNode* tree, int remove_key){
+    if(tree == NULL){
+        return NULL;
+    }
+    if(tree -> key < remove_key){
+        tree->right = _remove_i(tree->right, remove_key);
+    }
+    else if(tree->key > remove_key){
+        tree->left = _remove_i(tree->left, remove_key);
+    }
+    else{
+        if(tree->left == NULL){ //Sem filho esquerdo ou sem filhos
+            InnerNode* right = tree->right;
+            free(tree);
+            return right; //No caso sem filhos, retorna NULL
+        }
+        else if(tree->right == NULL){//Sem filho direito
+            InnerNode* left = tree->left;
+            free(tree);
+            return left;
+        }
+        else{ //Dois filhos
+            InnerNode* max_of_left = _find_max_i(tree->left);
+            tree->key = max_of_left->key;
+            tree->data = max_of_left->data;
+
+            tree->left = _remove_i(tree->left, max_of_left->key);
+        }
+    }
+    if(tree == NULL){//Se a remoção esvaziou essa sub-árvore, nada a fazer.
+        return NULL;
+    }
+
+    tree->height = 1 + _max(_height_i(tree->left), _height_i(tree->right));
+
+    int bf = _balance_factor_i(tree);
+
+    if(bf > 1){//Sub-árvore esquerda grande
+        int sub_bf = _balance_factor_i(tree->left);
+        if(sub_bf >= 0){//Causa é a sub-árvore esquerda do filho esquerdo: LL
+            return _right_rotate_i(tree);
+        }
+        else{//Causa é a sub-árvore direita do filho esquerdo: LR
+            tree -> left = _left_rotate_i(tree -> left);
+            return _right_rotate_i(tree);
+        }
+    }
+    if(bf < -1){//Sub-árvore direita grande
+        int sub_bf = _balance_factor_i(tree->right);
+        if(sub_bf < 0){//Causa é a sub-árvore direita do filho direito: RR
+            return _left_rotate_i(tree);
+        }
+        else{//Causa é a sub-árvore esquerda do filho direito: RL
+            tree -> right = _right_rotate_i(tree -> right);
+            return _left_rotate_i(tree);
+        }
+    }
+
+    return tree;
+
+}
+
+OuterNode * _remove_o(OuterNode* tree, int remove_key){
+    if(tree == NULL){
+        return NULL;
+    }
+    if(tree -> key < remove_key){
+        tree->right = _remove_o(tree->right, remove_key);
+    }
+    else if(tree->key > remove_key){
+        tree->left = _remove_o(tree->left, remove_key);
+    }
+    else{
+        if(tree->left == NULL){
+            OuterNode* right = tree->right;
+            free(tree);
+            return right;
+        }
+        else if(tree->right == NULL){
+            OuterNode* left = tree->left;
+            free(tree);
+            return left;
+        }
+        else{
+            OuterNode* max_of_left = _find_max_o(tree->left);
+            tree->key = max_of_left->key;
+            tree->inner_tree = max_of_left->inner_tree;
+
+            tree->left = _remove_o(tree->left, max_of_left->key);
+        }
+    }
+
+    if(tree == NULL){
+        return NULL;
+    }
+
+    tree->height = 1 + _max(_height_o(tree->left), _height_o(tree->right));
+
+    int bf = _balance_factor_o(tree);
+
+    if(bf > 1){
+        int sub_bf = _balance_factor_o(tree->left);
+        if(sub_bf >= 0){
+            return _right_rotate_o(tree);
+        }
+        else{
+            tree -> left = _left_rotate_o(tree -> left);
+            return _right_rotate_o(tree);
+        }
+    }
+    if(bf < -1){
+        int sub_bf = _balance_factor_o(tree->right);
+        if(sub_bf < 0){
+            return _left_rotate_o(tree);
+        }
+        else{
+            tree -> right = _right_rotate_o(tree -> right);
+            return _left_rotate_o(tree);
+        }
+    }
+
+    return tree;
 }
 
 void _free_i_tree(InnerNode* tree){
@@ -254,7 +397,10 @@ void insert_element_avl(AVLMatrix* matrix, float value, int i, int j){
     }
 }
 
-int delete_element_avl(AVLMatrix* matrix, int i, int j); //TODO
+int delete_element_avl(AVLMatrix* matrix, int i, int j){
+    //TODO
+    return -1;
+}
 
 void transpose_avl(AVLMatrix* matrix){
     matrix->is_transposed = !matrix->is_transposed;
