@@ -26,4 +26,5 @@ void transpose_avl(AVLMatrix* matrix);
 void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C);
 void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, int a);
 void matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C);
+AVLMatrix* create_matrix_avl();
 void free_matrix_avl(AVLMatrix* matrix);
