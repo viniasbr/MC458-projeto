@@ -19,6 +19,7 @@ typedef struct OuterNode{
 typedef struct AVLMatrix{
     unsigned char is_transposed;
     struct OuterNode* root;
+    int k;
 } AVLMatrix;
 
 float get_element_avl(AVLMatrix* matrix, int i, int j);

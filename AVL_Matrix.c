@@ -2,6 +2,14 @@
 #include <stdlib.h>
 #include <math.h>
 
+// typedef struct {
+//     int i;
+//     int j;
+//     float data;
+// } Tuple;
+
+
+
 int _height_i(InnerNode* tree){
     if(!tree){
         return 0; 
@@ -97,7 +105,7 @@ OuterNode* _find_node_o(OuterNode* tree, int search_key){
     }
 }
 
-InnerNode* _insert_i(InnerNode* tree, int insert_key, float value){
+InnerNode* _insert_i(InnerNode* tree, int insert_key, float value, int* already_existed){
     if(!tree){
         InnerNode* new_node = malloc(sizeof (InnerNode));
         new_node -> key = insert_key;
@@ -109,14 +117,15 @@ InnerNode* _insert_i(InnerNode* tree, int insert_key, float value){
     }
 
     if(tree->key == insert_key){
+        *already_existed = 1;
         tree -> data = value;
         return tree;
     }
     if(tree->key < insert_key){
-        tree -> right = _insert_i(tree->right, insert_key, value);
+        tree -> right = _insert_i(tree->right, insert_key, value, already_existed);
     }
     if(tree->key > insert_key){
-        tree -> left = _insert_i(tree->left, insert_key, value);
+        tree -> left = _insert_i(tree->left, insert_key, value, already_existed);
     }
 
     tree->height = 1 + _max(_height_i(tree->left), _height_i(tree->right));
@@ -362,6 +371,32 @@ void _free_o_tree(OuterNode* tree){
     return;
 }
 
+void _scalar_mul_inner(InnerNode* inner_tree, AVLMatrix* B, int i, int a){
+    if(!inner_tree){
+        return;
+    }
+
+    _scalar_mul_inner(inner_tree -> left, B, i, a);
+
+    insert_element_avl(B, inner_tree->data * a, i, inner_tree -> key);
+
+    _scalar_mul_inner(inner_tree -> right, B, i, a);
+    return;
+}
+
+void _scalar_mul_outer(OuterNode* outer_tree, AVLMatrix* B, int a){
+    if(!outer_tree){
+        return;
+    }
+
+    _scalar_mul_outer(outer_tree -> left, B, a);
+
+    _scalar_mul_inner(outer_tree-> inner_tree, B, outer_tree-> key, a);
+
+    _scalar_mul_outer(outer_tree -> right, B, a);
+    return;
+}
+
 float get_element_avl(AVLMatrix* matrix, int i, int j){
     if(matrix -> is_transposed){
         int temp = i;
@@ -385,34 +420,86 @@ void insert_element_avl(AVLMatrix* matrix, float value, int i, int j){
         i = j;
         j = temp;
     }
+    int already_existed = 0;
     OuterNode* o_node = _find_node_o(matrix->root, i);
     if(o_node){
-        o_node->inner_tree = _insert_i(o_node->inner_tree, j, value);
+        o_node->inner_tree = _insert_i(o_node->inner_tree, j, value, &already_existed);
+        if(!already_existed){
+            matrix-> k = matrix -> k + 1;
+        }
         return;
     }
     else{
-        InnerNode* new_i_tree = _insert_i(NULL, j, value);
+        InnerNode* new_i_tree = _insert_i(NULL, j, value, &already_existed);
         matrix -> root = _insert_o(matrix->root, i, new_i_tree);
+        matrix -> k = matrix -> k + 1;
         return;
     }
 }
 
 int delete_element_avl(AVLMatrix* matrix, int i, int j){
-    //TODO
-    return -1;
+    if(matrix->is_transposed){
+        int temp = i;
+        i = j;
+        j = temp;
+    }
+
+    OuterNode* o_node = _find_node_o(matrix->root, i);
+    if(!o_node){
+        //Linha não existe
+        return 0;
+    }
+    InnerNode* i_node = _find_node_i(o_node->inner_tree, j);
+    if(!i_node){
+        //Dado não existe
+        return 0;
+    }
+
+    o_node->inner_tree = _remove_i(o_node->inner_tree, j);
+    matrix -> k = matrix -> k - 1;
+
+    if(o_node->inner_tree == NULL){
+        //Se a árvore interna de um nó externo está vazia, o nó externo não existe.
+        matrix->root = _remove_o(matrix->root, i);
+    }
+
+    return 1;
 }
 
 void transpose_avl(AVLMatrix* matrix){
     matrix->is_transposed = !matrix->is_transposed;
 }
 
-void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C); //TODO
-void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, int a); //TODO
+void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
+    /*Ideia para implementação: Copiar B para C, armazenar os valores de A em uma pilha ou fila, desempilhar ou desenfileirar
+    conferindo se o valor está em C. Se tiver, atualizar o valor para o valor somado. Caso não esteja, inserir o valor em C.
+    Dá pra usar uma pilha de tamanho constante, uma vez que agora a matriz sabe a quantidade de elementos não nulos dentro dela.*/
+}; //TODO
+void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, int a){
+    if(!A || !B){
+        return;
+    }
+
+    _free_o_tree(B-> root); //Limpa B, permite a reutilização da mesma variável
+    B-> root = NULL;
+    B-> k = 0;
+
+    B->is_transposed = A->is_transposed;
+
+    if(a == 0){
+        return;
+    }
+
+    _scalar_mul_outer(A->root, B, a);
+
+    return;
+    }
 void matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C); //TODO
 AVLMatrix* create_matrix_avl(){
     AVLMatrix* matrix = malloc(sizeof(AVLMatrix));
     matrix->root = NULL;
     matrix->is_transposed = 0;
+    matrix->k = 0;
     return matrix;
 }
 void free_matrix_avl(AVLMatrix* matrix){
