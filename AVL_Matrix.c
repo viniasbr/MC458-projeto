@@ -397,10 +397,11 @@ void _copy_matrix(AVLMatrix* source, AVLMatrix* dest){
     if(source == dest){
         return;
     }
-    _free_o_tree(dest->root);
-    dest->root = _clone_outer_tree(source->root);
+    _free_o_tree(dest->main_root);
+    _free_o_tree(dest->transposed_root);
+    dest->main_root = _clone_outer_tree(source->main_root);
+    dest->transposed_root = _clone_outer_tree(source->transposed_root);
     dest->k = source->k;
-    dest->is_transposed = source->is_transposed;
 }
 
 void _multiply_inner_tree(InnerNode* tree, float a){
@@ -450,12 +451,7 @@ float get_element_avl(AVLMatrix* matrix, int i, int j){
     if(!matrix){
         return NAN;
     }
-    if(matrix -> is_transposed){
-        int temp = i;
-        i = j;
-        j = temp;
-    }
-    OuterNode* o_node = _find_node_o(matrix->root, i);
+    OuterNode* o_node = _find_node_o(matrix->main_root, i);
     if(!o_node){
         return 0.0f;
     }

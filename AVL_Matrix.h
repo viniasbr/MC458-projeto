@@ -17,8 +17,8 @@ typedef struct OuterNode{
 } OuterNode;
 
 typedef struct AVLMatrix{
-    unsigned char is_transposed;
-    struct OuterNode* root;
+    struct OuterNode* main_root;
+    struct OuterNode* transposed_root;
     int k;
 } AVLMatrix;
 
