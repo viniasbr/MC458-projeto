@@ -364,39 +364,6 @@ void _free_o_tree(OuterNode* tree){
     return;
 }
 
-void _scalar_mul_inner(InnerNode* inner_tree, AVLMatrix* B, int i, int a){
-    if(!inner_tree){
-        return;
-    }
-
-    _scalar_mul_inner(inner_tree -> left, B, i, a);
-
-    int row = i;
-    int col = inner_tree->key;
-    if(B->is_transposed){
-        int temp = row;
-        row = col;
-        col = temp;
-    }
-    insert_element_avl(B, inner_tree->data * a, row, col);
-
-    _scalar_mul_inner(inner_tree -> right, B, i, a);
-    return;
-}
-
-void _scalar_mul_outer(OuterNode* outer_tree, AVLMatrix* B, int a){
-    if(!outer_tree){
-        return;
-    }
-
-    _scalar_mul_outer(outer_tree -> left, B, a);
-
-    _scalar_mul_inner(outer_tree-> inner_tree, B, outer_tree-> key, a);
-
-    _scalar_mul_outer(outer_tree -> right, B, a);
-    return;
-}
-
 void _copy_inner(InnerNode* inner_tree, int* I, int* J, float* Data, int* position, int i){
     if(!inner_tree){
         return;
@@ -512,31 +479,7 @@ void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, int a){
     if(!A || !B){
         return;
     }
-
-    OuterNode* source_tree = A->root;
-    int same_matrix = (A == B);
-    if(!same_matrix){ //Limpa a variável que vai usar caso não seja a mesma matriz.
-        _free_o_tree(B->root);
-    }
-    B-> root = NULL; //Se for a mesma matriz, o ponteiro para os dados está salvo.
-    B-> k = 0; //_scalar_mul_outer faz a contagem novamente.
-
-    B->is_transposed = A->is_transposed;
-
-    if(a == 0){
-        if(same_matrix){
-            _free_o_tree(source_tree); //Se multiplicar a própria matriz por zero, deve-se apagar tudo.
-        }
-        return;
-    }
-
-    _scalar_mul_outer(source_tree, B, a);
-
-    if(same_matrix){
-        _free_o_tree(source_tree); //A árvore original pode ser liberada.
-    }
-
-    return;
+    //TODO
 }
 
 void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
