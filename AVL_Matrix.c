@@ -1,11 +1,67 @@
 #include "AVL_Matrix.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
 
 void _allocation_fail(){
     fprintf(stderr, "Error: memory allocation failed.\n");
     exit(EXIT_FAILURE);
+}
+
+const char* avl_status_string(AVLStatus status){
+    switch(status){
+        case AVL_STATUS_OK:
+            return "Operation completed successfully";
+        case AVL_STATUS_NOT_FOUND:
+            return "Element not found";
+        case AVL_ERROR_NULL_MATRIX:
+            return "Matrix pointer is NULL";
+        case AVL_ERROR_OUT_OF_BOUNDS:
+            return "Indices out of bounds";
+        case AVL_ERROR_DIMENSION_MISMATCH:
+            return "Matrix dimensions mismatch";
+        case AVL_ERROR_INVALID_ARGUMENT:
+            return "Invalid argument";
+        case AVL_ERROR_NOT_IMPLEMENTED:
+            return "Operation not implemented";
+        default:
+            return "Unknown error";
+    }
+}
+
+static AVLStatus _validate_matrix(AVLMatrix* matrix){
+    if(!matrix){
+        return AVL_ERROR_NULL_MATRIX;
+    }
+    if(matrix->n < 0 || matrix->m < 0){
+        return AVL_ERROR_INVALID_ARGUMENT;
+    }
+    return AVL_STATUS_OK;
+}
+
+static AVLStatus _validate_indices(AVLMatrix* matrix, int i, int j){
+    AVLStatus status = _validate_matrix(matrix);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
+    if(i < 0 || i >= matrix->n || j < 0 || j >= matrix->m){
+        return AVL_ERROR_OUT_OF_BOUNDS;
+    }
+    return AVL_STATUS_OK;
+}
+
+static AVLStatus _validate_same_dimensions(AVLMatrix* A, AVLMatrix* B){
+    AVLStatus status = _validate_matrix(A);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
+    status = _validate_matrix(B);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
+    if(A->n != B->n || A->m != B->m){
+        return AVL_ERROR_DIMENSION_MISMATCH;
+    }
+    return AVL_STATUS_OK;
 }
 
 int _height_i(InnerNode* tree){
@@ -408,18 +464,25 @@ OuterNode* _clone_outer_tree(OuterNode* tree){
     return new_node;
 }
 
-void _copy_matrix(AVLMatrix* source, AVLMatrix* dest){
+AVLStatus _copy_matrix(AVLMatrix* source, AVLMatrix* dest){
     if(!source || !dest){
-        return;
+        return AVL_ERROR_NULL_MATRIX;
     }
     if(source == dest){
-        return;
+        return AVL_STATUS_OK;
+    }
+    AVLStatus status = _validate_matrix(source);
+    if(status != AVL_STATUS_OK){
+        return status;
     }
     _free_o_tree(dest->main_root);
     _free_o_tree(dest->transposed_root);
     dest->main_root = _clone_outer_tree(source->main_root);
     dest->transposed_root = _clone_outer_tree(source->transposed_root);
     dest->k = source->k;
+    dest->n = source->n;
+    dest->m = source->m;
+    return AVL_STATUS_OK;
 }
 
 void _multiply_inner_tree(InnerNode* tree, float a){
@@ -465,24 +528,31 @@ void _copy_outer(OuterNode* outer_tree, int* I, int* J, float* Data, int* positi
     return;
 }
 
-float get_element_avl(AVLMatrix* matrix, int i, int j){
-    if(!matrix){
-        return NAN;
+AVLStatus get_element_avl(AVLMatrix* matrix, int i, int j, float* out_value){
+    if(!out_value){
+        return AVL_ERROR_INVALID_ARGUMENT;
+    }
+    *out_value = 0.0f;
+    AVLStatus status = _validate_indices(matrix, i, j);
+    if(status != AVL_STATUS_OK){
+        return status;
     }
     OuterNode* o_node = _find_node_o(matrix->main_root, i);
     if(!o_node){
-        return 0.0f;
+        return AVL_STATUS_OK;
     }
     InnerNode* i_node = _find_node_i(o_node->inner_tree, j);
     if(!i_node){
-        return 0.0f;
+        return AVL_STATUS_OK;
     }
-    return i_node -> data;
+    *out_value = i_node -> data;
+    return AVL_STATUS_OK;
 }
 
-void insert_element_avl(AVLMatrix* matrix, float value, int i, int j){
-    if(!matrix){
-        return;
+AVLStatus insert_element_avl(AVLMatrix* matrix, float value, int i, int j){
+    AVLStatus status = _validate_indices(matrix, i, j);
+    if(status != AVL_STATUS_OK){
+        return status;
     }
     int already_existed = 0;
     OuterNode* o_node = _find_node_o(matrix->main_root, i);
@@ -506,21 +576,22 @@ void insert_element_avl(AVLMatrix* matrix, float value, int i, int j){
         InnerNode* new_transposed_i_tree = _insert_i(NULL, i, value, &transposed_existed);
         matrix -> transposed_root = _insert_o(matrix->transposed_root, j, new_transposed_i_tree);
     }
-    return;
+    return AVL_STATUS_OK;
 }
 
-int delete_element_avl(AVLMatrix* matrix, int i, int j){
-    if(!matrix){
-        return -1;
+AVLStatus delete_element_avl(AVLMatrix* matrix, int i, int j){
+    AVLStatus status = _validate_indices(matrix, i, j);
+    if(status != AVL_STATUS_OK){
+        return status;
     }
 
     OuterNode* o_node_main = _find_node_o(matrix->main_root, i);
     if(!o_node_main){
-        return 0;
+        return AVL_STATUS_NOT_FOUND;
     }
     InnerNode* i_node_main = _find_node_i(o_node_main->inner_tree, j);
     if(!i_node_main){
-        return 0;
+        return AVL_STATUS_NOT_FOUND;
     }
 
     o_node_main->inner_tree = _remove_i(o_node_main->inner_tree, j);
@@ -531,32 +602,46 @@ int delete_element_avl(AVLMatrix* matrix, int i, int j){
     }
 
     OuterNode* o_node_transposed = _find_node_o(matrix->transposed_root, j);
-    if(o_node_transposed){
-        o_node_transposed->inner_tree = _remove_i(o_node_transposed->inner_tree, i);
-        if(o_node_transposed->inner_tree == NULL){
-            matrix->transposed_root = _remove_o(matrix->transposed_root, j);
-        }
+    if(!o_node_transposed){
+        return AVL_ERROR_INVALID_ARGUMENT;
     }
-    else{//Se estiver na árvore main mas não na árvore transposta, algo deu errado.
-        return -1;
+    o_node_transposed->inner_tree = _remove_i(o_node_transposed->inner_tree, i);
+    if(o_node_transposed->inner_tree == NULL){
+        matrix->transposed_root = _remove_o(matrix->transposed_root, j);
     }
 
-    return 1;
+    return AVL_STATUS_OK;
 }
 
-void transpose_avl(AVLMatrix* matrix){
-    if(!matrix){
-        return;
+AVLStatus transpose_avl(AVLMatrix* matrix){
+    AVLStatus status = _validate_matrix(matrix);
+    if(status != AVL_STATUS_OK){
+        return status;
     }
     OuterNode* temp = matrix -> main_root;
     matrix -> main_root = matrix -> transposed_root;
     matrix -> transposed_root = temp;
-    return;
+    int temp_dim = matrix->n;
+    matrix->n = matrix->m;
+    matrix->m = temp_dim;
+    return AVL_STATUS_OK;
 }
 
-void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, float a){
+AVLStatus scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, float a){
     if(!A || !B){
-        return;
+        return AVL_ERROR_NULL_MATRIX;
+    }
+
+    if(A != B){
+        AVLStatus status = _validate_same_dimensions(A, B);
+        if(status != AVL_STATUS_OK){
+            return status;
+        }
+    } else {
+        AVLStatus status = _validate_matrix(A);
+        if(status != AVL_STATUS_OK){
+            return status;
+        }
     }
 
     if(A == B){
@@ -566,11 +651,11 @@ void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, float a){
             A->main_root = NULL;
             A->transposed_root = NULL;
             A->k = 0;
-            return;
+            return AVL_STATUS_OK;
         }
         _multiply_outer_tree(A->main_root, a);
         _multiply_outer_tree(A->transposed_root, a);
-        return;
+        return AVL_STATUS_OK;
     }
 
     if(a == 0.0f){
@@ -579,20 +664,37 @@ void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, float a){
         B->main_root = NULL;
         B->transposed_root = NULL;
         B->k = 0;
-        return;
+        B->n = A->n;
+        B->m = A->m;
+        return AVL_STATUS_OK;
     }
 
-    _copy_matrix(A, B);
+    AVLStatus status = _copy_matrix(A, B);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
     _multiply_outer_tree(B->main_root, a);
     _multiply_outer_tree(B->transposed_root, a);
-    return;
+    return AVL_STATUS_OK;
 }
 
-void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
+AVLStatus sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
     if(!A || !B || !C){
-        return;
+        return AVL_ERROR_NULL_MATRIX;
     }
-    _copy_matrix(B, C);
+    AVLStatus status = _validate_same_dimensions(A, B);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
+    status = _validate_same_dimensions(A, C);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
+
+    status = _copy_matrix(B, C);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
     int* I = NULL;
     int* J = NULL;
     float* Data = NULL;
@@ -616,16 +718,55 @@ void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
     int position = 0;
     _copy_outer(A->main_root, I, J, Data, &position);
     for(int pos = 0; pos < A->k; pos++){
-        float element = get_element_avl(C, I[pos], J[pos]);
-        insert_element_avl(C, element + Data[pos], I[pos], J[pos]);
+        float element = 0.0f;
+        status = get_element_avl(C, I[pos], J[pos], &element);
+        if(status != AVL_STATUS_OK){
+            free(I);
+            free(J);
+            free(Data);
+            return status;
+        }
+        status = insert_element_avl(C, element + Data[pos], I[pos], J[pos]);
+        if(status != AVL_STATUS_OK){
+            free(I);
+            free(J);
+            free(Data);
+            return status;
+        }
     }
 
     free(I);
     free(J);
     free(Data);
+    return AVL_STATUS_OK;
 }
-void matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C); //TODO
-AVLMatrix* create_matrix_avl(){
+AVLStatus matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
+    if(!A || !B || !C){
+        return AVL_ERROR_NULL_MATRIX;
+    }
+    if(!(A-> n == B -> m)){
+        return AVL_ERROR_DIMENSION_MISMATCH;
+    }
+    if(C->n != A->n || C-> m != B-> m){
+        return AVL_ERROR_DIMENSION_MISMATCH;
+    }
+    if(A == C || B == C){ //Não vamos implementar multiplicação de matrizes "in-place" no momento
+        return AVL_ERROR_NOT_IMPLEMENTED;
+    }
+    _free_o_tree(C->main_root);
+    _free_o_tree(C->transposed_root);
+    C-> main_root = NULL;
+    C-> transposed_root = NULL;
+    C-> k = 0;
+
+    
+    return AVL_ERROR_NOT_IMPLEMENTED; //TODO
+}
+AVLMatrix* create_matrix_avl(int n, int m){
+    if(n < 0 || m < 0){
+        fprintf(stderr, "Error: matrix dimensions must be non-negative.\n");
+        return NULL;
+    }
     AVLMatrix* matrix = malloc(sizeof(AVLMatrix));
     if(!matrix){
         _allocation_fail();
@@ -633,9 +774,14 @@ AVLMatrix* create_matrix_avl(){
     matrix->main_root = NULL;
     matrix->transposed_root = NULL;
     matrix->k = 0;
+    matrix->n = n;
+    matrix->m = m;
     return matrix;
 }
 void free_matrix_avl(AVLMatrix* matrix){
+    if(!matrix){
+        return;
+    }
     _free_o_tree(matrix->main_root);
     _free_o_tree(matrix->transposed_root);
     free(matrix);
