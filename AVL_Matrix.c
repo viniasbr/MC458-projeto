@@ -2,14 +2,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-// typedef struct {
-//     int i;
-//     int j;
-//     float data;
-// } Tuple;
-
-
-
 int _height_i(InnerNode* tree){
     if(!tree){
         return 0; 
@@ -368,6 +360,7 @@ void _free_o_tree(OuterNode* tree){
     _free_o_tree(tree->left);
     _free_o_tree(tree->right);
     _free_i_tree(tree->inner_tree);
+    free(tree);
     return;
 }
 
@@ -378,7 +371,14 @@ void _scalar_mul_inner(InnerNode* inner_tree, AVLMatrix* B, int i, int a){
 
     _scalar_mul_inner(inner_tree -> left, B, i, a);
 
-    insert_element_avl(B, inner_tree->data * a, i, inner_tree -> key);
+    int row = i;
+    int col = inner_tree->key;
+    if(B->is_transposed){
+        int temp = row;
+        row = col;
+        col = temp;
+    }
+    insert_element_avl(B, inner_tree->data * a, row, col);
 
     _scalar_mul_inner(inner_tree -> right, B, i, a);
     return;
@@ -397,7 +397,35 @@ void _scalar_mul_outer(OuterNode* outer_tree, AVLMatrix* B, int a){
     return;
 }
 
+void _copy_inner(InnerNode* inner_tree, int* I, int* J, float* Data, int* position, int i){
+    if(!inner_tree){
+        return;
+    }
+
+    _copy_inner(inner_tree -> left, I, J, Data, position, i);
+    I[*position] = i;
+    J[*position] = inner_tree->key;
+    Data[*position] = inner_tree->data;
+    *position = *position + 1;
+    _copy_inner(inner_tree -> right, I, J, Data, position, i);
+    return;
+}
+
+void _copy_outer(OuterNode* outer_tree, int* I, int* J, float* Data, int* position){
+    if(!outer_tree){
+        return;
+    }
+
+    _copy_outer(outer_tree -> left, I, J, Data, position);
+    _copy_inner(outer_tree->inner_tree, I, J, Data, position, outer_tree->key);
+    _copy_outer(outer_tree-> right, I, J, Data, position);
+    return;
+}
+
 float get_element_avl(AVLMatrix* matrix, int i, int j){
+    if(!matrix){
+        return NAN;
+    }
     if(matrix -> is_transposed){
         int temp = i;
         i = j;
@@ -405,16 +433,19 @@ float get_element_avl(AVLMatrix* matrix, int i, int j){
     }
     OuterNode* o_node = _find_node_o(matrix->root, i);
     if(!o_node){
-        return NAN;
+        return 0.0f;
     }
     InnerNode* i_node = _find_node_i(o_node->inner_tree, j);
     if(!i_node){
-        return NAN;
+        return 0.0f;
     }
     return i_node -> data;
 }
 
 void insert_element_avl(AVLMatrix* matrix, float value, int i, int j){
+    if(!matrix){
+        return;
+    }
     if(matrix -> is_transposed){
         int temp = i;
         i = j;
@@ -438,6 +469,10 @@ void insert_element_avl(AVLMatrix* matrix, float value, int i, int j){
 }
 
 int delete_element_avl(AVLMatrix* matrix, int i, int j){
+    if(!matrix){
+        return -1;
+    }
+
     if(matrix->is_transposed){
         int temp = i;
         i = j;
@@ -467,33 +502,69 @@ int delete_element_avl(AVLMatrix* matrix, int i, int j){
 }
 
 void transpose_avl(AVLMatrix* matrix){
+    if(!matrix){
+        return;
+    }
     matrix->is_transposed = !matrix->is_transposed;
+}
+
+void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, int a){
+    if(!A || !B){
+        return;
+    }
+
+    OuterNode* source_tree = A->root;
+    int same_matrix = (A == B);
+    if(!same_matrix){ //Limpa a variável que vai usar caso não seja a mesma matriz.
+        _free_o_tree(B->root);
+    }
+    B-> root = NULL; //Se for a mesma matriz, o ponteiro para os dados está salvo.
+    B-> k = 0; //_scalar_mul_outer faz a contagem novamente.
+
+    B->is_transposed = A->is_transposed;
+
+    if(a == 0){
+        if(same_matrix){
+            _free_o_tree(source_tree); //Se multiplicar a própria matriz por zero, deve-se apagar tudo.
+        }
+        return;
+    }
+
+    _scalar_mul_outer(source_tree, B, a);
+
+    if(same_matrix){
+        _free_o_tree(source_tree); //A árvore original pode ser liberada.
+    }
+
+    return;
 }
 
 void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
     /*Ideia para implementação: Copiar B para C, armazenar os valores de A em uma pilha ou fila, desempilhar ou desenfileirar
     conferindo se o valor está em C. Se tiver, atualizar o valor para o valor somado. Caso não esteja, inserir o valor em C.
     Dá pra usar uma pilha de tamanho constante, uma vez que agora a matriz sabe a quantidade de elementos não nulos dentro dela.*/
-}; //TODO
-void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, int a){
-    if(!A || !B){
+    if(!A || !B || !C){
         return;
     }
-
-    _free_o_tree(B-> root); //Limpa B, permite a reutilização da mesma variável
-    B-> root = NULL;
-    B-> k = 0;
-
-    B->is_transposed = A->is_transposed;
-
-    if(a == 0){
-        return;
+    scalar_mul_avl(B, C, 1);
+    int* I = (int*) malloc(sizeof(int) * A->k);
+    int* J = (int*) malloc(sizeof(int) * A->k);
+    float* Data = (float*) malloc(sizeof(float) * A-> k);
+    int position = 0;
+    _copy_outer(A->root, I, J, Data, &position);
+    if(A->is_transposed){
+        int * temp = I;
+        I = J;
+        J = temp;
     }
-
-    _scalar_mul_outer(A->root, B, a);
-
-    return;
+    for(int pos = 0; pos < A->k; pos++){
+        float element = get_element_avl(C, I[pos], J[pos]);
+        insert_element_avl(C, element + Data[pos], I[pos], J[pos]);
     }
+    free(I);
+    free(J);
+    free(Data);
+}
 void matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C); //TODO
 AVLMatrix* create_matrix_avl(){
     AVLMatrix* matrix = malloc(sizeof(AVLMatrix));
