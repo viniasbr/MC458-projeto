@@ -364,6 +364,63 @@ void _free_o_tree(OuterNode* tree){
     return;
 }
 
+InnerNode* _clone_inner_tree(InnerNode* tree){
+    if(!tree){
+        return NULL;
+    }
+    InnerNode* new_node = malloc(sizeof(InnerNode));
+    new_node->key = tree->key;
+    new_node->data = tree->data;
+    new_node->height = tree->height;
+    new_node->left = _clone_inner_tree(tree->left);
+    new_node->right = _clone_inner_tree(tree->right);
+    return new_node;
+}
+
+OuterNode* _clone_outer_tree(OuterNode* tree){
+    if(!tree){
+        return NULL;
+    }
+    OuterNode* new_node = malloc(sizeof(OuterNode));
+    new_node->key = tree->key;
+    new_node->height = tree->height;
+    new_node->inner_tree = _clone_inner_tree(tree->inner_tree);
+    new_node->left = _clone_outer_tree(tree->left);
+    new_node->right = _clone_outer_tree(tree->right);
+    return new_node;
+}
+
+void _copy_matrix(AVLMatrix* source, AVLMatrix* dest){
+    if(!source || !dest){
+        return;
+    }
+    if(source == dest){
+        return;
+    }
+    _free_o_tree(dest->root);
+    dest->root = _clone_outer_tree(source->root);
+    dest->k = source->k;
+    dest->is_transposed = source->is_transposed;
+}
+
+void _multiply_inner_tree(InnerNode* tree, float a){
+    if(!tree){
+        return;
+    }
+    _multiply_inner_tree(tree->left, a);
+    tree->data = tree->data * a;
+    _multiply_inner_tree(tree->right, a);
+}
+
+void _multiply_outer_tree(OuterNode* tree, float a){
+    if(!tree){
+        return;
+    }
+    _multiply_outer_tree(tree->left, a);
+    _multiply_inner_tree(tree->inner_tree, a);
+    _multiply_outer_tree(tree->right, a);
+}
+
 void _copy_inner(InnerNode* inner_tree, int* I, int* J, float* Data, int* position, int i){
     if(!inner_tree){
         return;
@@ -475,21 +532,39 @@ void transpose_avl(AVLMatrix* matrix){
     matrix->is_transposed = !matrix->is_transposed;
 }
 
-void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, int a){
+void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, float a){
     if(!A || !B){
         return;
     }
-    //TODO
+
+    if(A == B){
+        if(a == 0.0f){
+            _free_o_tree(A->root);
+            A->root = NULL;
+            A->k = 0;
+            return;
+        }
+        _multiply_outer_tree(A->root, a);
+        return;
+    }
+
+    if(a == 0.0f){
+        _free_o_tree(B->root);
+        B->root = NULL;
+        B->k = 0;
+        B->is_transposed = A->is_transposed;
+        return;
+    }
+
+    _copy_matrix(A, B);
+    _multiply_outer_tree(B->root, a);
 }
 
 void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
-    /*Ideia para implementação: Copiar B para C, armazenar os valores de A em uma pilha ou fila, desempilhar ou desenfileirar
-    conferindo se o valor está em C. Se tiver, atualizar o valor para o valor somado. Caso não esteja, inserir o valor em C.
-    Dá pra usar uma pilha de tamanho constante, uma vez que agora a matriz sabe a quantidade de elementos não nulos dentro dela.*/
     if(!A || !B || !C){
         return;
     }
-    scalar_mul_avl(B, C, 1);
+    _copy_matrix(B, C);
     int* I = (int*) malloc(sizeof(int) * A->k);
     int* J = (int*) malloc(sizeof(int) * A->k);
     float* Data = (float*) malloc(sizeof(float) * A-> k);

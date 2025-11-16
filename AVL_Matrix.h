@@ -26,7 +26,7 @@ float get_element_avl(AVLMatrix* matrix, int i, int j);
 void insert_element_avl(AVLMatrix* matrix, float value, int i, int j);
 int delete_element_avl(AVLMatrix* matrix, int i, int j);
 void transpose_avl(AVLMatrix* matrix);
-void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, int a);
+void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, float a);
 void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C);
 void matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C);
 AVLMatrix* create_matrix_avl();
