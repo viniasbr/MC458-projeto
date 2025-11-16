@@ -1,6 +1,12 @@
 #include "AVL_Matrix.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
+
+void _allocation_fail(){
+    fprintf(stderr, "Error: memory allocation failed.\n");
+    exit(EXIT_FAILURE);
+}
 
 int _height_i(InnerNode* tree){
     if(!tree){
@@ -100,6 +106,9 @@ OuterNode* _find_node_o(OuterNode* tree, int search_key){
 InnerNode* _insert_i(InnerNode* tree, int insert_key, float value, int* already_existed){
     if(!tree){
         InnerNode* new_node = malloc(sizeof (InnerNode));
+        if(!new_node){
+            _allocation_fail();
+        }
         new_node -> key = insert_key;
         new_node -> data = value;
         new_node -> left = NULL;
@@ -152,6 +161,9 @@ InnerNode* _insert_i(InnerNode* tree, int insert_key, float value, int* already_
 OuterNode* _insert_o(OuterNode* tree, int insert_key, InnerNode* inner_tree){
     if(!tree){
         OuterNode* new_node = malloc(sizeof (OuterNode));
+        if(!new_node){
+            _allocation_fail();
+        }
         new_node -> key = insert_key;
         new_node -> inner_tree = inner_tree;
         new_node -> left = NULL;
@@ -369,6 +381,9 @@ InnerNode* _clone_inner_tree(InnerNode* tree){
         return NULL;
     }
     InnerNode* new_node = malloc(sizeof(InnerNode));
+    if(!new_node){
+        _allocation_fail();
+    }
     new_node->key = tree->key;
     new_node->data = tree->data;
     new_node->height = tree->height;
@@ -382,6 +397,9 @@ OuterNode* _clone_outer_tree(OuterNode* tree){
         return NULL;
     }
     OuterNode* new_node = malloc(sizeof(OuterNode));
+    if(!new_node){
+        _allocation_fail();
+    }
     new_node->key = tree->key;
     new_node->height = tree->height;
     new_node->inner_tree = _clone_inner_tree(tree->inner_tree);
@@ -466,26 +484,29 @@ void insert_element_avl(AVLMatrix* matrix, float value, int i, int j){
     if(!matrix){
         return;
     }
-    if(matrix -> is_transposed){
-        int temp = i;
-        i = j;
-        j = temp;
-    }
     int already_existed = 0;
-    OuterNode* o_node = _find_node_o(matrix->root, i);
+    OuterNode* o_node = _find_node_o(matrix->main_root, i);
     if(o_node){
         o_node->inner_tree = _insert_i(o_node->inner_tree, j, value, &already_existed);
-        if(!already_existed){
-            matrix-> k = matrix -> k + 1;
-        }
-        return;
     }
     else{
-        InnerNode* new_i_tree = _insert_i(NULL, j, value, &already_existed);
-        matrix -> root = _insert_o(matrix->root, i, new_i_tree);
-        matrix -> k = matrix -> k + 1;
-        return;
+        InnerNode* new_main_i_tree = _insert_i(NULL, j, value, &already_existed);
+        matrix -> main_root = _insert_o(matrix->main_root, i, new_main_i_tree);
     }
+    if(!already_existed){
+        matrix-> k = matrix -> k + 1;
+    }
+
+    int transposed_existed = already_existed;
+    OuterNode* o_node_transposed = _find_node_o(matrix->transposed_root, j);
+    if(o_node_transposed){
+        o_node_transposed->inner_tree = _insert_i(o_node_transposed->inner_tree, i, value, &transposed_existed);
+    }
+    else{
+        InnerNode* new_transposed_i_tree = _insert_i(NULL, i, value, &transposed_existed);
+        matrix -> transposed_root = _insert_o(matrix->transposed_root, j, new_transposed_i_tree);
+    }
+    return;
 }
 
 int delete_element_avl(AVLMatrix* matrix, int i, int j){
@@ -493,29 +514,31 @@ int delete_element_avl(AVLMatrix* matrix, int i, int j){
         return -1;
     }
 
-    if(matrix->is_transposed){
-        int temp = i;
-        i = j;
-        j = temp;
-    }
-
-    OuterNode* o_node = _find_node_o(matrix->root, i);
-    if(!o_node){
-        //Linha não existe
+    OuterNode* o_node_main = _find_node_o(matrix->main_root, i);
+    if(!o_node_main){
         return 0;
     }
-    InnerNode* i_node = _find_node_i(o_node->inner_tree, j);
-    if(!i_node){
-        //Dado não existe
+    InnerNode* i_node_main = _find_node_i(o_node_main->inner_tree, j);
+    if(!i_node_main){
         return 0;
     }
 
-    o_node->inner_tree = _remove_i(o_node->inner_tree, j);
+    o_node_main->inner_tree = _remove_i(o_node_main->inner_tree, j);
     matrix -> k = matrix -> k - 1;
 
-    if(o_node->inner_tree == NULL){
-        //Se a árvore interna de um nó externo está vazia, o nó externo não existe.
-        matrix->root = _remove_o(matrix->root, i);
+    if(o_node_main->inner_tree == NULL){
+        matrix->main_root = _remove_o(matrix->main_root, i);
+    }
+
+    OuterNode* o_node_transposed = _find_node_o(matrix->transposed_root, j);
+    if(o_node_transposed){
+        o_node_transposed->inner_tree = _remove_i(o_node_transposed->inner_tree, i);
+        if(o_node_transposed->inner_tree == NULL){
+            matrix->transposed_root = _remove_o(matrix->transposed_root, j);
+        }
+    }
+    else{//Se estiver na árvore main mas não na árvore transposta, algo deu errado.
+        return -1;
     }
 
     return 1;
@@ -525,7 +548,10 @@ void transpose_avl(AVLMatrix* matrix){
     if(!matrix){
         return;
     }
-    matrix->is_transposed = !matrix->is_transposed;
+    OuterNode* temp = matrix -> main_root;
+    matrix -> main_root = matrix -> transposed_root;
+    matrix -> transposed_root = temp;
+    return;
 }
 
 void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, float a){
@@ -535,25 +561,31 @@ void scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, float a){
 
     if(A == B){
         if(a == 0.0f){
-            _free_o_tree(A->root);
-            A->root = NULL;
+            _free_o_tree(A->main_root);
+            _free_o_tree(A->transposed_root);
+            A->main_root = NULL;
+            A->transposed_root = NULL;
             A->k = 0;
             return;
         }
-        _multiply_outer_tree(A->root, a);
+        _multiply_outer_tree(A->main_root, a);
+        _multiply_outer_tree(A->transposed_root, a);
         return;
     }
 
     if(a == 0.0f){
-        _free_o_tree(B->root);
-        B->root = NULL;
+        _free_o_tree(B->main_root);
+        _free_o_tree(B->transposed_root);
+        B->main_root = NULL;
+        B->transposed_root = NULL;
         B->k = 0;
-        B->is_transposed = A->is_transposed;
         return;
     }
 
     _copy_matrix(A, B);
-    _multiply_outer_tree(B->root, a);
+    _multiply_outer_tree(B->main_root, a);
+    _multiply_outer_tree(B->transposed_root, a);
+    return;
 }
 
 void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
@@ -561,20 +593,33 @@ void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
         return;
     }
     _copy_matrix(B, C);
-    int* I = (int*) malloc(sizeof(int) * A->k);
-    int* J = (int*) malloc(sizeof(int) * A->k);
-    float* Data = (float*) malloc(sizeof(float) * A-> k);
-    int position = 0;
-    _copy_outer(A->root, I, J, Data, &position);
-    if(A->is_transposed){
-        int * temp = I;
-        I = J;
-        J = temp;
+    int* I = NULL;
+    int* J = NULL;
+    float* Data = NULL;
+    if(A->k > 0){
+        I = (int*) malloc(sizeof(int) * A->k);
+        J = (int*) malloc(sizeof(int) * A->k);
+        Data = (float*) malloc(sizeof(float) * A-> k);
+        if(!I || !J || !Data){
+            if(I){
+                free(I);
+            }
+            if(J){
+                free(J);
+            }
+            if(Data){
+                free(Data);
+            }
+            _allocation_fail();
+        }
     }
+    int position = 0;
+    _copy_outer(A->main_root, I, J, Data, &position);
     for(int pos = 0; pos < A->k; pos++){
         float element = get_element_avl(C, I[pos], J[pos]);
         insert_element_avl(C, element + Data[pos], I[pos], J[pos]);
     }
+
     free(I);
     free(J);
     free(Data);
@@ -582,12 +627,16 @@ void sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
 void matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C); //TODO
 AVLMatrix* create_matrix_avl(){
     AVLMatrix* matrix = malloc(sizeof(AVLMatrix));
-    matrix->root = NULL;
-    matrix->is_transposed = 0;
+    if(!matrix){
+        _allocation_fail();
+    }
+    matrix->main_root = NULL;
+    matrix->transposed_root = NULL;
     matrix->k = 0;
     return matrix;
 }
 void free_matrix_avl(AVLMatrix* matrix){
-    _free_o_tree(matrix->root);
+    _free_o_tree(matrix->main_root);
+    _free_o_tree(matrix->transposed_root);
     free(matrix);
 }
