@@ -528,32 +528,13 @@ static void _copy_outer(OuterNode* outer_tree, int* I, int* J, float* Data, int*
     return;
 }
 
-static void _matmul_inner(InnerNode* A_inner_tree, InnerNode* B_inner_tree, float* accumulator){
-    if(!A_inner_tree){
+static void _matmul_inner_accumulate(InnerNode* inner_tree, float value, float* accumulator){
+    if(!inner_tree){
         return;
     }
-    _matmul_inner(A_inner_tree-> left, B_inner_tree, accumulator);
-    InnerNode* B_i_node = _find_node_i(B_inner_tree, A_inner_tree->key);
-    if(B_i_node){
-        *accumulator += A_inner_tree->data * B_i_node -> data;
-    }
-    _matmul_inner(A_inner_tree -> right, B_inner_tree, accumulator);
-    return;
-
-}
-
-static void _matmul_outer(OuterNode* A_main, OuterNode* B_transposed, AVLMatrix* C){
-    if(!A_main){
-        return;
-    }
-    _matmul_outer(A_main->left,B_transposed,C);
-    OuterNode* B_column_node = _find_node_o(B_transposed, A_main->key);
-    if(B_column_node){
-        float accumulator;
-        _matmul_inner(A_main->inner_tree, B_column_node->inner_tree, &accumulator);
-        insert_element_avl(C,accumulator,A_main->key,B_transposed->key);
-    }
-    _matmul_outer(A_main-> right, B_transposed, C);
+    _matmul_inner_accumulate(inner_tree->left, value, accumulator);
+    *accumulator += value * inner_tree->data;
+    _matmul_inner_accumulate(inner_tree->right, value, accumulator);
     return;
 }
 
@@ -791,7 +772,49 @@ AVLStatus matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
     if(A ->k == 0 || B->k == 0){
         return AVL_STATUS_OK;
     }
-    _matmul_outer(A->main_root, B->transposed_root, C);
+    int* I = NULL;
+    int* J = NULL;
+    float* Data = NULL;
+    if(A->k > 0){
+        I = (int*) malloc(sizeof(int) * A->k);
+        J = (int*) malloc(sizeof(int) * A->k);
+        Data = (float*) malloc(sizeof(float) * A-> k);
+        if(!I || !J || !Data){
+            if(I){
+                free(I);
+            }
+            if(J){
+                free(J);
+            }
+            if(Data){
+                free(Data);
+            }
+            _allocation_fail();
+        }
+    }
+    int position = 0;
+    _copy_outer(A->main_root, I, J, Data, &position);
+    for(int pos = 0; pos < A->k; pos++){
+        OuterNode* B_column = _find_node_o(B->transposed_root, J[pos]);
+        if(B_column){
+            float current;
+            AVLStatus status = get_element_avl(C, I[pos], B_column -> key, &current);
+            if(status != AVL_STATUS_OK){
+                free(I);
+                free(J);
+                free(Data);
+                return status;
+            }
+            _matmul_inner_accumulate(B_column->inner_tree, Data[pos], &current);
+            status = insert_element_avl(C, current, I[pos], B_column -> key);
+            if(status != AVL_STATUS_OK){
+                free(I);
+                free(J);
+                free(Data);
+                return status;
+            }
+        }
+    }
     
     return AVL_STATUS_OK;
 }
