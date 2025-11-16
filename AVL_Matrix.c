@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void _allocation_fail(){
+static void _allocation_fail(){
     fprintf(stderr, "Error: memory allocation failed.\n");
     exit(EXIT_FAILURE);
 }
@@ -64,30 +64,30 @@ static AVLStatus _validate_same_dimensions(AVLMatrix* A, AVLMatrix* B){
     return AVL_STATUS_OK;
 }
 
-int _height_i(InnerNode* tree){
+static int _height_i(InnerNode* tree){
     if(!tree){
         return 0; 
     }
     return tree->height;
 }
-int _height_o(OuterNode* tree){
+static int _height_o(OuterNode* tree){
     if(!tree){
         return 0; 
     }
     return tree->height;
 }
-int _balance_factor_i(InnerNode* tree){
+static int _balance_factor_i(InnerNode* tree){
     return _height_i(tree->left) - _height_i(tree->right);
 }
-int _balance_factor_o(OuterNode* tree){
+static int _balance_factor_o(OuterNode* tree){
     return _height_o(tree->left) - _height_o(tree->right);
 }
 
-int _max(int a, int b) {
+static int _max(int a, int b) {
     return (a > b) ? a : b;
 }
 
-InnerNode* _left_rotate_i(InnerNode* tree){
+static InnerNode* _left_rotate_i(InnerNode* tree){
     InnerNode* right = tree->right;
     tree -> right = right->left;
     right->left = tree;
@@ -97,7 +97,7 @@ InnerNode* _left_rotate_i(InnerNode* tree){
     return right;
 }
 
-InnerNode* _right_rotate_i(InnerNode* tree){
+static InnerNode* _right_rotate_i(InnerNode* tree){
     InnerNode* left = tree->left;
     tree -> left = left-> right;
     left->right = tree;
@@ -107,7 +107,7 @@ InnerNode* _right_rotate_i(InnerNode* tree){
     return left;
 }
 
-OuterNode* _left_rotate_o(OuterNode* tree){
+static OuterNode* _left_rotate_o(OuterNode* tree){
     OuterNode* right = tree->right;
     tree->right = right->left;
     right->left = tree;
@@ -118,7 +118,7 @@ OuterNode* _left_rotate_o(OuterNode* tree){
     return right;
 }
 
-OuterNode* _right_rotate_o(OuterNode* tree){
+static OuterNode* _right_rotate_o(OuterNode* tree){
     OuterNode* left = tree->left;
     tree->left = left->right;
     left->right = tree;
@@ -129,7 +129,7 @@ OuterNode* _right_rotate_o(OuterNode* tree){
     return left;
 }
 
-InnerNode* _find_node_i(InnerNode* tree, int search_key){
+static InnerNode* _find_node_i(InnerNode* tree, int search_key){
     if(!tree){
         return NULL;
     }
@@ -144,7 +144,7 @@ InnerNode* _find_node_i(InnerNode* tree, int search_key){
     }
 }
 
-OuterNode* _find_node_o(OuterNode* tree, int search_key){
+static OuterNode* _find_node_o(OuterNode* tree, int search_key){
     if(!tree){
         return NULL;
     }
@@ -159,7 +159,7 @@ OuterNode* _find_node_o(OuterNode* tree, int search_key){
     }
 }
 
-InnerNode* _insert_i(InnerNode* tree, int insert_key, float value, int* already_existed){
+static InnerNode* _insert_i(InnerNode* tree, int insert_key, float value, int* already_existed){
     if(!tree){
         InnerNode* new_node = malloc(sizeof (InnerNode));
         if(!new_node){
@@ -214,7 +214,7 @@ InnerNode* _insert_i(InnerNode* tree, int insert_key, float value, int* already_
 
 }
 
-OuterNode* _insert_o(OuterNode* tree, int insert_key, InnerNode* inner_tree){
+static OuterNode* _insert_o(OuterNode* tree, int insert_key, InnerNode* inner_tree){
     if(!tree){
         OuterNode* new_node = malloc(sizeof (OuterNode));
         if(!new_node){
@@ -267,7 +267,7 @@ OuterNode* _insert_o(OuterNode* tree, int insert_key, InnerNode* inner_tree){
     return tree;
 
 }
-InnerNode * _find_max_i (InnerNode * tree){
+static InnerNode * _find_max_i (InnerNode * tree){
     if(tree == NULL){
         return NULL;
     }
@@ -277,7 +277,7 @@ InnerNode * _find_max_i (InnerNode * tree){
     return _find_max_i(tree -> right);
 }
 
-OuterNode * _find_max_o (OuterNode * tree){
+static OuterNode * _find_max_o (OuterNode * tree){
     if(tree == NULL){
         return NULL;
     }
@@ -287,7 +287,7 @@ OuterNode * _find_max_o (OuterNode * tree){
     return _find_max_o(tree -> right);
 }
 
-InnerNode * _remove_i(InnerNode* tree, int remove_key){
+static InnerNode * _remove_i(InnerNode* tree, int remove_key){
     if(tree == NULL){
         return NULL;
     }
@@ -349,7 +349,7 @@ InnerNode * _remove_i(InnerNode* tree, int remove_key){
 
 }
 
-OuterNode * _remove_o(OuterNode* tree, int remove_key){
+static OuterNode * _remove_o(OuterNode* tree, int remove_key){
     if(tree == NULL){
         return NULL;
     }
@@ -411,7 +411,7 @@ OuterNode * _remove_o(OuterNode* tree, int remove_key){
     return tree;
 }
 
-void _free_i_tree(InnerNode* tree){
+static void _free_i_tree(InnerNode* tree){
     if(tree == NULL){
         return;
     }
@@ -421,7 +421,7 @@ void _free_i_tree(InnerNode* tree){
     return;
 }
 
-void _free_o_tree(OuterNode* tree){
+static void _free_o_tree(OuterNode* tree){
     if(tree == NULL){
         return;
     }
@@ -432,7 +432,7 @@ void _free_o_tree(OuterNode* tree){
     return;
 }
 
-InnerNode* _clone_inner_tree(InnerNode* tree){
+static InnerNode* _clone_inner_tree(InnerNode* tree){
     if(!tree){
         return NULL;
     }
@@ -448,7 +448,7 @@ InnerNode* _clone_inner_tree(InnerNode* tree){
     return new_node;
 }
 
-OuterNode* _clone_outer_tree(OuterNode* tree){
+static OuterNode* _clone_outer_tree(OuterNode* tree){
     if(!tree){
         return NULL;
     }
@@ -464,7 +464,7 @@ OuterNode* _clone_outer_tree(OuterNode* tree){
     return new_node;
 }
 
-AVLStatus _copy_matrix(AVLMatrix* source, AVLMatrix* dest){
+static AVLStatus _copy_matrix(AVLMatrix* source, AVLMatrix* dest){
     if(!source || !dest){
         return AVL_ERROR_NULL_MATRIX;
     }
@@ -485,7 +485,7 @@ AVLStatus _copy_matrix(AVLMatrix* source, AVLMatrix* dest){
     return AVL_STATUS_OK;
 }
 
-void _multiply_inner_tree(InnerNode* tree, float a){
+static void _multiply_inner_tree(InnerNode* tree, float a){
     if(!tree){
         return;
     }
@@ -494,7 +494,7 @@ void _multiply_inner_tree(InnerNode* tree, float a){
     _multiply_inner_tree(tree->right, a);
 }
 
-void _multiply_outer_tree(OuterNode* tree, float a){
+static void _multiply_outer_tree(OuterNode* tree, float a){
     if(!tree){
         return;
     }
@@ -503,7 +503,7 @@ void _multiply_outer_tree(OuterNode* tree, float a){
     _multiply_outer_tree(tree->right, a);
 }
 
-void _copy_inner(InnerNode* inner_tree, int* I, int* J, float* Data, int* position, int i){
+static void _copy_inner(InnerNode* inner_tree, int* I, int* J, float* Data, int* position, int i){
     if(!inner_tree){
         return;
     }
@@ -517,7 +517,7 @@ void _copy_inner(InnerNode* inner_tree, int* I, int* J, float* Data, int* positi
     return;
 }
 
-void _copy_outer(OuterNode* outer_tree, int* I, int* J, float* Data, int* position){
+static void _copy_outer(OuterNode* outer_tree, int* I, int* J, float* Data, int* position){
     if(!outer_tree){
         return;
     }
@@ -740,6 +740,7 @@ AVLStatus sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
     free(Data);
     return AVL_STATUS_OK;
 }
+
 AVLStatus matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
     if(!A || !B || !C){
         return AVL_ERROR_NULL_MATRIX;
