@@ -528,6 +528,18 @@ static void _copy_outer(OuterNode* outer_tree, int* I, int* J, float* Data, int*
     return;
 }
 
+static void _copy_outer_pointers(OuterNode* outer_tree, int* L, InnerNode** Pointers, int * position){
+    if(!outer_tree){
+        return;
+    }
+
+    _copy_outer_pointers(outer_tree -> left, L, Pointers, position);
+    L[*position] = outer_tree-> key;
+    Pointers[*position] = outer_tree->inner_tree;
+    *position = *position + 1;
+    _copy_outer_pointers(outer_tree -> right, L, Pointers, position);
+}
+
 AVLStatus get_element_avl(AVLMatrix* matrix, int i, int j, float* out_value){
     if(!out_value){
         return AVL_ERROR_INVALID_ARGUMENT;
@@ -745,7 +757,7 @@ AVLStatus matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
     if(!A || !B || !C){
         return AVL_ERROR_NULL_MATRIX;
     }
-    if(!(A-> n == B -> m)){
+    if(!(A-> m == B -> n)){
         return AVL_ERROR_DIMENSION_MISMATCH;
     }
     if(C->n != A->n || C-> m != B-> m){
@@ -759,6 +771,13 @@ AVLStatus matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
     C-> main_root = NULL;
     C-> transposed_root = NULL;
     C-> k = 0;
+    if(A ->k == 0 || B->k == 0){
+        return AVL_STATUS_OK;
+    }
+    int* L = (int*) malloc(sizeof(int) * A->k);
+    InnerNode** P_A = (InnerNode**) malloc(sizeof(InnerNode*) * A->k);
+    int position;
+    _copy_outer_pointers(A->main_root, L, P_A, &position);
 
     
     return AVL_ERROR_NOT_IMPLEMENTED; //TODO
