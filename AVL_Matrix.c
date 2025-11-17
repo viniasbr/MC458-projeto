@@ -528,22 +528,36 @@ static void _copy_outer(OuterNode* outer_tree, int* I, int* J, float* Data, int*
     return;
 }
 
-static void _matmul_inner_accumulate(InnerNode* inner_tree, float value, float* accumulator){
+static AVLStatus _matmul_inner_accumulate(InnerNode* inner_tree, int row, float A_value, AVLMatrix* C){
     if(!inner_tree){
-        return;
+        return AVL_STATUS_OK;
     }
-    _matmul_inner_accumulate(inner_tree->left, value, accumulator);
-    *accumulator += value * inner_tree->data;
-    _matmul_inner_accumulate(inner_tree->right, value, accumulator);
-    return;
+    AVLStatus status = _matmul_inner_accumulate(inner_tree->left, row, A_value, C);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
+    float current = 0.0f;
+    status = get_element_avl(C, row, inner_tree->key, &current);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
+    status = insert_element_avl(C, current + (A_value * inner_tree->data), row, inner_tree->key);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
+    return _matmul_inner_accumulate(inner_tree->right, row, A_value, C);
 }
 
 AVLStatus get_element_avl(AVLMatrix* matrix, int i, int j, float* out_value){
     if(!out_value){
         return AVL_ERROR_INVALID_ARGUMENT;
     }
+    AVLStatus status = _validate_matrix(matrix);
+    if(status != AVL_STATUS_OK){
+        return status;
+    }
     *out_value = 0.0f;
-    AVLStatus status = _validate_indices(matrix, i, j);
+    status = _validate_indices(matrix, i, j);
     if(status != AVL_STATUS_OK){
         return status;
     }
@@ -795,18 +809,9 @@ AVLStatus matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
     int position = 0;
     _copy_outer(A->main_root, I, J, Data, &position);
     for(int pos = 0; pos < A->k; pos++){
-        OuterNode* B_column = _find_node_o(B->transposed_root, J[pos]);
-        if(B_column){
-            float current;
-            AVLStatus status = get_element_avl(C, I[pos], B_column -> key, &current);
-            if(status != AVL_STATUS_OK){
-                free(I);
-                free(J);
-                free(Data);
-                return status;
-            }
-            _matmul_inner_accumulate(B_column->inner_tree, Data[pos], &current);
-            status = insert_element_avl(C, current, I[pos], B_column -> key);
+        OuterNode* B_row = _find_node_o(B->main_root, J[pos]);
+        if(B_row){
+            AVLStatus status = _matmul_inner_accumulate(B_row->inner_tree, I[pos], Data[pos], C);
             if(status != AVL_STATUS_OK){
                 free(I);
                 free(J);
@@ -815,6 +820,10 @@ AVLStatus matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
             }
         }
     }
+
+    free(I);
+    free(J);
+    free(Data);
     
     return AVL_STATUS_OK;
 }
