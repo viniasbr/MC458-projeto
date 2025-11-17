@@ -432,7 +432,7 @@ static void _free_o_tree(OuterNode* tree){
     return;
 }
 
-static InnerNode* _clone_inner_tree(InnerNode* tree){
+static InnerNode* _clone_i_tree(InnerNode* tree){
     if(!tree){
         return NULL;
     }
@@ -443,12 +443,12 @@ static InnerNode* _clone_inner_tree(InnerNode* tree){
     new_node->key = tree->key;
     new_node->data = tree->data;
     new_node->height = tree->height;
-    new_node->left = _clone_inner_tree(tree->left);
-    new_node->right = _clone_inner_tree(tree->right);
+    new_node->left = _clone_i_tree(tree->left);
+    new_node->right = _clone_i_tree(tree->right);
     return new_node;
 }
 
-static OuterNode* _clone_outer_tree(OuterNode* tree){
+static OuterNode* _clone_o_tree(OuterNode* tree){
     if(!tree){
         return NULL;
     }
@@ -458,9 +458,9 @@ static OuterNode* _clone_outer_tree(OuterNode* tree){
     }
     new_node->key = tree->key;
     new_node->height = tree->height;
-    new_node->inner_tree = _clone_inner_tree(tree->inner_tree);
-    new_node->left = _clone_outer_tree(tree->left);
-    new_node->right = _clone_outer_tree(tree->right);
+    new_node->inner_tree = _clone_i_tree(tree->inner_tree);
+    new_node->left = _clone_o_tree(tree->left);
+    new_node->right = _clone_o_tree(tree->right);
     return new_node;
 }
 
@@ -477,62 +477,62 @@ static AVLStatus _copy_matrix(AVLMatrix* source, AVLMatrix* dest){
     }
     _free_o_tree(dest->main_root);
     _free_o_tree(dest->transposed_root);
-    dest->main_root = _clone_outer_tree(source->main_root);
-    dest->transposed_root = _clone_outer_tree(source->transposed_root);
+    dest->main_root = _clone_o_tree(source->main_root);
+    dest->transposed_root = _clone_o_tree(source->transposed_root);
     dest->k = source->k;
     dest->n = source->n;
     dest->m = source->m;
     return AVL_STATUS_OK;
 }
 
-static void _scalar_multiply_inner_tree(InnerNode* tree, float a){
+static void _scalar_multiply_i_tree(InnerNode* tree, float a){
     if(!tree){
         return;
     }
-    _scalar_multiply_inner_tree(tree->left, a);
+    _scalar_multiply_i_tree(tree->left, a);
     tree->data = tree->data * a;
-    _scalar_multiply_inner_tree(tree->right, a);
+    _scalar_multiply_i_tree(tree->right, a);
 }
 
-static void _scalar_multiply_outer_tree(OuterNode* tree, float a){
+static void _scalar_multiply_o_tree(OuterNode* tree, float a){
     if(!tree){
         return;
     }
-    _scalar_multiply_outer_tree(tree->left, a);
-    _scalar_multiply_inner_tree(tree->inner_tree, a);
-    _scalar_multiply_outer_tree(tree->right, a);
+    _scalar_multiply_o_tree(tree->left, a);
+    _scalar_multiply_i_tree(tree->inner_tree, a);
+    _scalar_multiply_o_tree(tree->right, a);
 }
 
-static void _copy_inner(InnerNode* inner_tree, int* I, int* J, float* Data, int* position, int i){
+static void _copy_i(InnerNode* inner_tree, int* I, int* J, float* Data, int* position, int i){
     if(!inner_tree){
         return;
     }
 
-    _copy_inner(inner_tree -> left, I, J, Data, position, i);
+    _copy_i(inner_tree -> left, I, J, Data, position, i);
     I[*position] = i;
     J[*position] = inner_tree->key;
     Data[*position] = inner_tree->data;
     *position = *position + 1;
-    _copy_inner(inner_tree -> right, I, J, Data, position, i);
+    _copy_i(inner_tree -> right, I, J, Data, position, i);
     return;
 }
 
-static void _copy_outer(OuterNode* outer_tree, int* I, int* J, float* Data, int* position){
+static void _copy_o(OuterNode* outer_tree, int* I, int* J, float* Data, int* position){
     if(!outer_tree){
         return;
     }
 
-    _copy_outer(outer_tree -> left, I, J, Data, position);
-    _copy_inner(outer_tree->inner_tree, I, J, Data, position, outer_tree->key);
-    _copy_outer(outer_tree-> right, I, J, Data, position);
+    _copy_o(outer_tree -> left, I, J, Data, position);
+    _copy_i(outer_tree->inner_tree, I, J, Data, position, outer_tree->key);
+    _copy_o(outer_tree-> right, I, J, Data, position);
     return;
 }
 
-static AVLStatus _matmul_inner_accumulate(InnerNode* inner_tree, int row, float A_value, AVLMatrix* C){
+static AVLStatus _matmul_i_accumulate(InnerNode* inner_tree, int row, float A_value, AVLMatrix* C){
     if(!inner_tree){
         return AVL_STATUS_OK;
     }
-    AVLStatus status = _matmul_inner_accumulate(inner_tree->left, row, A_value, C);
+    AVLStatus status = _matmul_i_accumulate(inner_tree->left, row, A_value, C);
     if(status != AVL_STATUS_OK){
         return status;
     }
@@ -545,7 +545,7 @@ static AVLStatus _matmul_inner_accumulate(InnerNode* inner_tree, int row, float 
     if(status != AVL_STATUS_OK){
         return status;
     }
-    return _matmul_inner_accumulate(inner_tree->right, row, A_value, C);
+    return _matmul_i_accumulate(inner_tree->right, row, A_value, C);
 }
 
 AVLStatus get_element_avl(AVLMatrix* matrix, int i, int j, float* out_value){
@@ -677,8 +677,8 @@ AVLStatus scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, float a){
             A->k = 0;
             return AVL_STATUS_OK;
         }
-        _scalar_multiply_outer_tree(A->main_root, a);
-        _scalar_multiply_outer_tree(A->transposed_root, a);
+        _scalar_multiply_o_tree(A->main_root, a);
+        _scalar_multiply_o_tree(A->transposed_root, a);
         return AVL_STATUS_OK;
     }
 
@@ -697,8 +697,8 @@ AVLStatus scalar_mul_avl(AVLMatrix* A, AVLMatrix* B, float a){
     if(status != AVL_STATUS_OK){
         return status;
     }
-    _scalar_multiply_outer_tree(B->main_root, a);
-    _scalar_multiply_outer_tree(B->transposed_root, a);
+    _scalar_multiply_o_tree(B->main_root, a);
+    _scalar_multiply_o_tree(B->transposed_root, a);
     return AVL_STATUS_OK;
 }
 
@@ -740,7 +740,7 @@ AVLStatus sum_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
         }
     }
     int position = 0;
-    _copy_outer(A->main_root, I, J, Data, &position);
+    _copy_o(A->main_root, I, J, Data, &position);
     for(int pos = 0; pos < A->k; pos++){
         float element = 0.0f;
         status = get_element_avl(C, I[pos], J[pos], &element);
@@ -807,11 +807,11 @@ AVLStatus matrix_mul_avl(AVLMatrix* A, AVLMatrix* B, AVLMatrix* C){
         }
     }
     int position = 0;
-    _copy_outer(A->main_root, I, J, Data, &position);
+    _copy_o(A->main_root, I, J, Data, &position);
     for(int pos = 0; pos < A->k; pos++){
         OuterNode* B_row = _find_node_o(B->main_root, J[pos]);
         if(B_row){
-            AVLStatus status = _matmul_inner_accumulate(B_row->inner_tree, I[pos], Data[pos], C);
+            AVLStatus status = _matmul_i_accumulate(B_row->inner_tree, I[pos], Data[pos], C);
             if(status != AVL_STATUS_OK){
                 free(I);
                 free(J);

@@ -6,7 +6,11 @@
 \usepackage{amsthm}
 \usepackage{mathtools}
 \usepackage{minted}
+\usepackage[brazilian]{babel}
 \usepackage{enumitem}
+
+\newtheorem{thm}{Teorema}
+\newtheorem{lemma}[thm]{Lema}
 
 \title{MC458 - Projeto}
 \author{
@@ -32,7 +36,7 @@
         \centering
         \begin{tabular}{|l|c|}
             \hline
-            \multicolumn{1}{|c|}{\textbf{Função Trivial}} & \multicolumn{1}{c|}{\textbf{Complexidade de tempo}} \\ \hline
+            \multicolumn{1}{|c|}{\textbf{Função}} & \multicolumn{1}{c|}{\textbf{Complexidade de Tempo}} \\ \hline
             \texttt{avl\_status\_string} & $O(1)$ \\ \hline
             \texttt{create\_matrix\_avl} & $O(1)$ \\ \hline
             \texttt{transpose\_avl} & $O(1)$ \\ \hline
@@ -50,7 +54,123 @@
             \texttt{\_left\_rotate\_o} & $O(1)$ \\ \hline
             \texttt{\_right\_rotate\_o} & $O(1)$ \\ \hline
         \end{tabular}
-        \caption{Funções triviais de tempo constante na estrutura AVL.}
+        \caption{Funções com complexidade de tempo trivial da estrutura AVL.}
     \end{table}
+
+    \begin{lemma}\label{altura_AVL}
+    Sendo $h$ a altura de uma árvore AVL e $n$ seu número de nós, $h \in O(\log n)$.
+    \end{lemma}
+
+    \begin{proof}
+    A árvore AVL tem a garantia de que $|h_e - h_d| \le 1$ para todo nó. Seja $N(h)$ o número mínimo de nós de uma árvore AVL. Temos que, a árvore menos cheia possível que ainda respeita a condição de AVL deve respeitar:
+
+    \[
+    N(h) =
+    \begin{cases}
+        1 & \text{se } h = 1\\
+        2 & \text{se } h = 2\\
+        1 + N(h-1) + N(h-2) & \text{se } h > 2
+    \end{cases}\]
+
+    \noindent Vamos provar por indução que $N \in \Omega(2^{\frac{h}{2}})$. Escolhendo $c = \frac{\sqrt{2}}{2}$, caso base:
+
+    \[1 \ge c\cdot \sqrt{2} \quad \land \quad 2 \ge c\cdot 2\]
+
+    \noindent Hipótese Indutiva: 
+    \[\forall i (1 \le i < h) \rightarrow c\cdot 2^{\frac{i}{2}} \le N(i)\]
+    \noindent Passo Indutivo: 
+
+    \begin{align*}
+        N(h) & = 1 + N(h-1) + N(h-2) \\
+             & \ge 1 + c\cdot 2^{\frac{h-1}{2}} + c\cdot 2^{\frac{h-2}{2}} \\
+             & = 1 + c\cdot 2^{\frac{h}{2}} \left(\frac{1}{\sqrt{2}} + \frac{1}{2}\right) \\
+             & \ge c\cdot 2^{\frac{h}{2}}.
+    \end{align*}
+
+    \noindent Assim, $N(h) \ge c\cdot 2^{\frac{h}{2}}$ e, dado que cada árvore AVL com altura $h$ possui pelo menos $N(h)$ nós, temos $n \ge N(h)$. Logo:
+
+    \[n \in \Omega(2^{\frac{h}{2}}) \implies h \in O(\log n)\]
+
+    \end{proof}
+
+    \subsubsection{Complexidade de espaço de \texttt{AVLMatrix}}
+
+    Os campos de tamanho variável de \texttt{AVLMatrix} são \texttt{main\_root} e \texttt{transposed\_root}. Ambos são árvores de nós "externos", onde cada nó contem árvores de nós "internos", que contem o dado armazenado. O somatório da quantidade de nós internos deve ser $k$, uma vez que só são armazenados elementos não nulos. No pior caso, cada nó "externo" guarda somente um nó "interno", gerando assim $k$ nós internos e externos para \texttt{main\_root} e $k$ nós internos e externos para \texttt{transposed\_root}. Assim, temos um gasto de memória proporcional à constante referente ao tamanho dos nós multiplicada por dois para cada um dos $k$ nós. Sendo assim, a estrutura gasta, trivialmente, $M(k) \in O(k)$ memória para o número de dados não nulos na matriz esparsa $k$.
+
+    \subsubsection{Complexidade de \texttt{\_find\_node\_i} e \texttt{\_find\_node\_o}}
+
+    A função faz somente um caminho da raiz até a folha, uma vez que, para cada nó, visita somente ou a sub-árvore esquerda ou a sub-árvore direita, sempre. Em cada chamada, é executado esforço computacional constante. Dessa forma, o algoritmo possui complexidade $T(h) \in O(h) \implies T(n) \in O(\log n)$, pelo lema \ref{altura_AVL}, sendo $n$ o número de nós e $h$ a altura.\\ \qed
+
+    \subsubsection{Complexidade de \texttt{\_insert\_i} e \texttt{\_insert\_o}}
+
+    A função faz somente um caminho da raiz até a folha, uma vez que, para cada nó, visita somente ou a sub-árvore esquerda ou a sub-árvore direita, sempre. Em cada chamada, é executado esforço computacional constante. Dessa forma, o algoritmo possui complexidade $T(h) \in O(h) \implies T(n) \in O(\log n)$, pelo lema \ref{altura_AVL}, sendo $n$ o número de nós e $h$ a altura.\\ \qed
+
+    \subsubsection{Complexidade de \texttt{\_find\_max\_i} e \texttt{\_find\_max\_o}}
+
+    A função faz somente um caminho da raiz até a folha, indo sempre pela sub-árvore direita. Assim, esse caminho está limitado pela altura da árvore, e esforço computacional constante é executado em cada chamada. Segue que o algoritmo possui complexidade $T(h) \in O(h) \implies T(n) \in O(\log n)$, pelo lema \ref{altura_AVL}, sendo $n$ o número de nós e $h$ a altura.\\ \qed
+
+    \subsubsection{Complexidade de \texttt{\_remove\_i} e \texttt{\_remove\_o}}
+
+    A função faz somente um caminho da raiz até o nó, uma vez que, para cada nó, visita somente ou a sub-árvore esquerda ou a sub-árvore direita, sempre. Em cada chamada não base, é executado esforço computacional constante. Dessa forma, o algoritmo possui complexidade $T(h) = T_r(h) + T_b(h)$. $T_r(h) \in O(h) \implies T_r(n) \in O(\log n)$, e o caso base de remoção de nó com dois filhos faz esforço constante, uma chamada para \texttt{\_find\_max\_*}, que faz esforço computacional linear na altura, e uma chamada para a própria função, com a garantia de cair num caso base de esforço computacional constante -- uma vez que o nó a ser removido é um nó folha. Dessa forma, ambas chamadas são realizadas em sub-árvores da árvore original, sendo limitadas superiormente pela altura da árvore total. Assim, $T_b(h) \in O(h) \implies T_b(n) \in O(\log n)$, o que leva a $T(h) \in O(h) \implies T(n) \in O(\log n)$.\\ \qed
+
+    \subsubsection{Complexidade de \texttt{\_free\_i\_tree} e \texttt{\_free\_o\_tree}}
+
+    Cada nó da árvore é visitado recursivamente, realizando esforço computacional constante em cada chamada no caso "inner". Assim, $T(n) \in O(n)$. No caso "outer", cada nó é visitado recursivamente, e em cada chamada recursiva, cada nó da árvore interna contida no nó externo é visitada pela função "inner". Dessa forma, $T(n) \in O(n)$, com a diferença que $n$ é o número total de nós "inner" em uma árvore "outer", ou seja, o número total de elementos que a estrutura armazena.\\ \qed
+
+    \subsubsection{Complexidade de \texttt{\_clone\_i\_tree} e \texttt{\_clone\_o\_tree}}
+
+    Cada nó da árvore é visitado recursivamente, realizando esforço computacional constante em cada chamada no caso "inner". Assim, $T(n) \in O(n)$. No caso "outer", cada nó é visitado recursivamente, e em cada chamada recursiva, cada nó da árvore interna contida no nó externo é visitada pela função "inner". Dessa forma, $T(n) \in O(n)$, com a diferença que $n$ é o número total de nós "inner" em uma árvore "outer", ou seja, o número total de elementos que a estrutura armazena. Essa função cria uma nova árvore que é uma exata cópia da árvore anterior, gastando assim $M(n) \in O(n)$ de memória.\\ \qed
+
+    \subsubsection{Complexidade de \texttt{\_copy\_matrix}}
+
+    Essa função faz esforço computacional constante e invoca duas funções de esforço computacional linear na quantidade de elementos duas vezes cada. Assim, a função possui complexidade $T(n) \in O(n)$.
+
+    \subsubsection{Complexidade de \texttt{\_scalar\_multiply\_i\_tree} e \texttt{\_scalar\_multiply\_o\_tree}}
+
+    Cada nó da árvore é visitado recursivamente, realizando esforço computacional constante em cada chamada no caso "inner". Assim, $T(n) \in O(n)$. No caso "outer", cada nó é visitado recursivamente, e em cada chamada recursiva, cada nó da árvore interna contida no nó externo é visitada pela função "inner". Dessa forma, $T(n) \in O(n)$, com a diferença que $n$ é o número total de nós "inner" em uma árvore "outer", ou seja, o número total de elementos que a estrutura armazena.\\ \qed
+
+    \subsubsection{Complexidade de \texttt{\_copy\_i} e \texttt{\_copy\_o}}
+
+    Cada nó da árvore é visitado recursivamente, realizando esforço computacional constante em cada chamada no caso "inner". Assim, $T(n) \in O(n)$. No caso "outer", cada nó é visitado recursivamente, e em cada chamada recursiva, cada nó da árvore interna contida no nó externo é visitada pela função "inner". Dessa forma, $T(n) \in O(n)$, com a diferença que $n$ é o número total de nós "inner" em uma árvore "outer", ou seja, o número total de elementos que a estrutura armazena.\\ \qed
+
+    \subsubsection{Complexidade de \texttt{\_matmul\_i\_accumulate}}
+
+    Cada nó da árvore é visitado recursivamente. A árvore interna representa exatamente uma coluna da matriz, e cada nó corresponde a um elemento não nulo. Denominamos $l$ a quantidade de elementos não nulos na dada coluna da matriz, que é a quantidade de elementos na árvore. Para cada chamada, o algoritmo chama dois algoritmos que serão provados como logarítmicos na quantidade de nós da referida árvore, além de realizar esforço computacional constante. Sendo assim, esse algoritmo possui complexidade $T(l,k_C) \in O(l\cdot \log k_C)$.
+
+    \subsubsection{Complexidade de \texttt{get\_element\_avl}}
+    O algoritmo faz duas chamadas para algoritmos logarítmicos na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(\log k)$.
+
+    \subsubsection{Complexidade de \texttt{insert\_element\_avl}}
+    O algoritmo faz oito chamadas para algoritmos logarítmicos na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(\log k)$.
+
+    \subsubsection{Complexidade de \texttt{delete\_element\_avl}}
+    O algoritmo faz sete chamadas para algoritmos logarítmicos na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(\log k)$.
+
+    \subsubsection{Complexidade de \texttt{transpose\_avl}}
+    O algoritmo faz apenas operações de tempo constante, garantindo $T(k) \in O(1)$.
+
+    \subsubsection{Complexidade de \texttt{scalar\_mul\_avl}}
+    O algoritmo faz no máximo uma quantidade constante de chamadas parra algoritmos lineares na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(k)$.
+
+    \subsubsection{Complexidade de \texttt{sum\_avl}}
+    O algoritmo chama um algoritmo linear na quantidade de nós para a matriz $B$, fazendo esforço proporcional a $k_B$. Ele também faz uma chamada a um algoritmo linear para a matriz $A$, fazendo esforço proporcional a $k_A$ e alocando $k_A$ de memória (o que ainda garante uso de memória $O(k)$). Por último, para cada elemento $k_A$ da matriz esparsa linearizada, são chamados dois algoritmos que fazem esforço logarítmico na matriz $C$, com $k$ elementos. Assim, temos esforço computacional proporcional a $k_A + k_B + k_A \cdot \log k < k_A + k_B \cdot \log k + k_A \cdot \log k$ o que implica em $T(k_A,k_B,k) \in O((k_A + k_B)\log k)$.
+
+    \subsubsection{Complexidade de \texttt{matrix\_mul\_avl}}
+
+    \textbf{NÃO TO CONSEGUINDO FECHAR ESSA PROVA}
+
+
+    \noindent Dois problemas: não consigo fazer o d\_B aparecer pq ele é definido pelo número médio de elementos em linhas não nulas da matriz B, e não consigo fazer o log de k\_B ser absorvido na complexidade.
+
+    \subsubsection{Complexidade de \texttt{create\_matrix\_avl}}
+
+    O algoritmo faz apenas operações de tempo constante, garantindo $T(k) \in O(1)$.
+
+    \subsubsection{Complexidade de \texttt{free\_matrix\_avl}}
+
+    O algoritmo faz duas chamadas para algoritmos lineares na quantidade de nós e faz esforço constante, garantindo $T(k) \in O(k)$.
+
+
+
     
 \end{document}
