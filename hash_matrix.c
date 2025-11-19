@@ -4,7 +4,8 @@
 #include "hash_matrix.h"
 
 #define INITIAL_CAPACITY 16
-#define LOAD_FACTOR 0.75
+#define LOAD_FACTOR_UPPER 0.75
+#define LOAD_FACTOR_LOWER 0.25
 
 unsigned int hash(int row, int column, int capacity){
     unsigned long h = ((unsigned long) ((row * 31337)%capacity) + (unsigned long) ((column * 2731)%capacity))%capacity;
@@ -27,9 +28,9 @@ HashMatrix createHashMatrix(int rows, int columns){
     return matrix;
 }
 
-void resize(HashMatrix matrix){
+void resize(HashMatrix matrix, float load_factor){
     int old_capacity = matrix->capacity;
-    int new_capacity = matrix->capacity*2; //dobra a capacidade 
+    int new_capacity = load_factor == LOAD_FACTOR_UPPER ? matrix->capacity*2 : matrix->capacity/2;
 
     Node *new_buckets = calloc(new_capacity, sizeof(Node));
     assert(new_buckets != NULL);
@@ -115,8 +116,11 @@ void setElement(HashMatrix matrix, int row, int column, float data){
     }
 
     if (data != 0.0){
-        if ((float)(matrix->count+1) / matrix->capacity > LOAD_FACTOR){
-            resize(matrix);
+        if ((float)(matrix->count+1) / matrix->capacity > LOAD_FACTOR_UPPER){
+            resize(matrix, LOAD_FACTOR_UPPER);
+            index = hash(row, column, matrix->capacity);
+        } else if ((float)(matrix->count+1) / matrix->capacity < LOAD_FACTOR_LOWER){
+            resize(matrix, LOAD_FACTOR_LOWER);
             index = hash(row, column, matrix->capacity);
         }
         Node new_node = malloc(sizeof(struct _node));
