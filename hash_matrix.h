@@ -13,7 +13,7 @@ struct _hashMatrix{
     bool is_tranposed;
 };
 
-HashMatrix createHashMatrix(int rows, int columns, int capacity);
+HashMatrix createHashMatrix(int rows, int columns);
 
 float getElement(HashMatrix matrix, int row, int column);
 
