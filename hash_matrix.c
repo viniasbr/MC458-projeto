@@ -3,25 +3,52 @@
 #include <assert.h>
 #include "hash_matrix.h"
 
+#define INITIAL_CAPACITY 16
+#define LOAD_FACTOR 0.75
+
 unsigned int hash(int row, int column, int capacity){
     unsigned long h = ((unsigned long) ((row * 31337)%capacity) + (unsigned long) ((column * 2731)%capacity))%capacity;
     return (unsigned int) h;
 }
 
-HashMatrix createHashMatrix(int rows, int columns, int capacity){
+HashMatrix createHashMatrix(int rows, int columns){
     HashMatrix matrix = malloc(sizeof(struct _hashMatrix));
     assert(matrix != NULL);
 
     matrix->rows = rows;
     matrix->columns = columns;
-    matrix->capacity = capacity;
+    matrix->capacity = INITIAL_CAPACITY;
     matrix->count = 0;
     matrix->is_tranposed = false;
 
-    matrix->buckets = calloc(capacity, sizeof(Node));
+    matrix->buckets = calloc(INITIAL_CAPACITY, sizeof(Node));
     assert(matrix->buckets != NULL);
 
     return matrix;
+}
+
+void resize(HashMatrix matrix){
+    int old_capacity = matrix->capacity;
+    int new_capacity = matrix->capacity*2; //dobra a capacidade 
+
+    Node *new_buckets = calloc(new_capacity, sizeof(Node));
+    assert(new_buckets != NULL);
+
+    for(int i = 0; i < old_capacity; i++){
+        Node curr = matrix->buckets[i];
+        while (curr != NULL){
+            Node next = curr->next;
+            unsigned long new_index = hash(curr->row, curr->column, new_capacity);
+
+            curr->next = new_buckets[new_index];
+            new_buckets[new_index] = curr;
+            curr = next;
+        }
+    }
+
+    free(matrix->buckets);
+    matrix->buckets = new_buckets;
+    matrix->capacity = new_capacity;
 }
 
 //A princípio é pra ser O(1)
@@ -45,6 +72,7 @@ float getElement(HashMatrix matrix, int row, int column){
         if (curr->row == target_row && curr->column == target_column){
             return curr->data;
         }
+        curr = curr->next;
     }
 
     return 0.0;
@@ -82,9 +110,15 @@ void setElement(HashMatrix matrix, int row, int column, float data){
             }
             return;
         }
+        prev = curr;
+        curr = curr->next;
     }
 
     if (data != 0.0){
+        if ((float)(matrix->count+1) / matrix->capacity > LOAD_FACTOR){
+            resize(matrix);
+            index = hash(row, column, matrix->capacity);
+        }
         Node new_node = malloc(sizeof(struct _node));
         assert(new_node != NULL);
         new_node->column = target_column;
@@ -96,8 +130,6 @@ void setElement(HashMatrix matrix, int row, int column, float data){
         matrix->buckets[index] = new_node;
         matrix->count++;
     }
-
-    //estudar a necessidade de um realloc aqui!
 }
 
 void transpose(HashMatrix matrix){
