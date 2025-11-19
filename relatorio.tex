@@ -137,29 +137,26 @@
     Cada nó da árvore é visitado recursivamente. A árvore interna representa exatamente uma coluna da matriz, e cada nó corresponde a um elemento não nulo. Denominamos $l$ a quantidade de elementos não nulos na dada coluna da matriz, que é a quantidade de elementos na árvore. Para cada chamada, o algoritmo chama dois algoritmos que serão provados como logarítmicos na quantidade de nós da referida árvore, além de realizar esforço computacional constante. Sendo assim, esse algoritmo possui complexidade $T(l,k_C) \in O(l\cdot \log k_C)$.
 
     \subsubsection{Complexidade de \texttt{get\_element\_avl}}
-    O algoritmo faz duas chamadas para algoritmos logarítmicos na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(\log k)$.
+    O algoritmo faz duas chamadas para algoritmos logarítmicos na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(1 + \log k)$.
 
     \subsubsection{Complexidade de \texttt{insert\_element\_avl}}
-    O algoritmo faz oito chamadas para algoritmos logarítmicos na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(\log k)$.
+    O algoritmo faz oito chamadas para algoritmos logarítmicos na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(1 + \log k)$.
 
     \subsubsection{Complexidade de \texttt{delete\_element\_avl}}
-    O algoritmo faz sete chamadas para algoritmos logarítmicos na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(\log k)$.
+    O algoritmo faz sete chamadas para algoritmos logarítmicos na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(1 + \log k)$.
 
     \subsubsection{Complexidade de \texttt{transpose\_avl}}
     O algoritmo faz apenas operações de tempo constante, garantindo $T(k) \in O(1)$.
 
     \subsubsection{Complexidade de \texttt{scalar\_mul\_avl}}
-    O algoritmo faz no máximo uma quantidade constante de chamadas parra algoritmos lineares na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(k)$.
+    O algoritmo faz no máximo uma quantidade constante de chamadas parra algoritmos lineares na quantidade de nós da árvore, além de chamadas de tempo constante. Assim, garantimos complexidade $T(k) \in O(1 + k)$.
 
     \subsubsection{Complexidade de \texttt{sum\_avl}}
-    O algoritmo chama um algoritmo linear na quantidade de nós para a matriz $B$, fazendo esforço proporcional a $k_B$. Ele também faz uma chamada a um algoritmo linear para a matriz $A$, fazendo esforço proporcional a $k_A$ e alocando $k_A$ de memória (o que ainda garante uso de memória $O(k)$). Por último, para cada elemento $k_A$ da matriz esparsa linearizada, são chamados dois algoritmos que fazem esforço logarítmico na matriz $C$, com $k$ elementos. Assim, temos esforço computacional proporcional a $k_A + k_B + k_A \cdot \log k < k_A + k_B \cdot \log k + k_A \cdot \log k$ o que implica em $T(k_A,k_B,k) \in O((k_A + k_B)\log k)$.
+    O algoritmo chama um algoritmo linear na quantidade de nós para a matriz $B$, fazendo esforço proporcional a $k_B$. Ele também faz uma chamada a um algoritmo linear para a matriz $A$, fazendo esforço proporcional a $k_A$ e alocando $k_A$ de memória (o que ainda garante uso de memória $O(k)$). Por último, para cada elemento $k_A$ da matriz esparsa linearizada, são chamados dois algoritmos que fazem esforço logarítmico na matriz $C$, com $k$ elementos. Assim, temos esforço computacional proporcional a $k_A + k_B + k_A \cdot \log k < k_A + k_B \cdot \log k + k_A \cdot \log k$ o que implica em $T(k_A,k_B,k) \in O(1 + (k_A + k_B)\log k)$.
 
     \subsubsection{Complexidade de \texttt{matrix\_mul\_avl}}
 
-    \textbf{NÃO TO CONSEGUINDO FECHAR ESSA PROVA}
-
-
-    \noindent Dois problemas: não consigo fazer o d\_B aparecer pq ele é definido pelo número médio de elementos em linhas não nulas da matriz B, e não consigo fazer o log de k\_B ser absorvido na complexidade.
+    O algoritmo começa com chamadas a \texttt{\_free\_o\_tree}, o que pode ser desconsiderado, já que faz esforço computacional constante se a matriz $C$ estiver vazia por estipulação. A chamada dessa função é uma mera precaução. O algoritmo reserva espaço proporcional a $3k$, o que não viola o requisito de memória $O(k)$. Depois, um algoritmo linear é chamado em $A$, fazendo esforço computacional proporcional a $k_A$. Então, para cada elemento de um vetor de tamanho $k_A$, é feito esforço computacional $\log(r_B)$, sendo $r_B$ a quantidade de linhas não-nulas da matriz, ainda tendo que $r_B < k_N$. Então, para cada elemento $k_A$ é feito no máximo esforço $c_B\log(k_C)$, sendo $c_B$ a quantidade de colunas não-nulas em $B$. Denotando por $m_B = \max\{c_B , r_B\}$, a complexidade total é proporcional a $k_A + k_A \log r_B + k_A c_B \log k_C < k_A \log m_B \log k_C +  k_A \log m_B \log k_C +  k_A \log m_B \log k_C = k_A \log k_B \log k_C < 3 k_A k_B \log k_C \in O(1 + k_A k_B (1+ \log (1+k_C)))$. De fato, uma análise assintótica mais justa para o algoritmo é $O(1 + k_A + k_A \cdot \log (1+ m_B) \log (1 + k_C) )$
 
     \subsubsection{Complexidade de \texttt{create\_matrix\_avl}}
 

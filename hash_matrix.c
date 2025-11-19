@@ -8,7 +8,7 @@
 #define LOAD_FACTOR_LOWER 0.25
 
 unsigned int hash(int row, int column, int capacity){
-    unsigned long h = ((unsigned long) ((row * 31337)%capacity) + (unsigned long) ((column * 2731)%capacity))%capacity;
+    unsigned long h = ((unsigned long) row * 31337 + (unsigned long) column * 2731)%capacity;
     return (unsigned int) h;
 }
 
@@ -28,14 +28,23 @@ HashMatrix createHashMatrix(int rows, int columns){
     return matrix;
 }
 
-void resize(HashMatrix matrix, float load_factor){
-    int old_capacity = matrix->capacity;
-    int new_capacity = load_factor == LOAD_FACTOR_UPPER ? matrix->capacity*2 : matrix->capacity/2;
+void resize(HashMatrix matrix){
+    int new_capacity = matrix->capacity;
+    
+    if ((float)(matrix->count+1) / matrix->capacity > LOAD_FACTOR_UPPER){
+        new_capacity = matrix->capacity *2;
+    } else if ((float)(matrix->count) / matrix->capacity < LOAD_FACTOR_LOWER){
+        new_capacity = matrix->capacity/2;
+    }
+
+    if (new_capacity == matrix->capacity){
+        return;
+    }
 
     Node *new_buckets = calloc(new_capacity, sizeof(Node));
     assert(new_buckets != NULL);
 
-    for(int i = 0; i < old_capacity; i++){
+    for(int i = 0; i < matrix->capacity; i++){
         Node curr = matrix->buckets[i];
         while (curr != NULL){
             Node next = curr->next;
@@ -58,7 +67,7 @@ float getElement(HashMatrix matrix, int row, int column){
     int max_columns = matrix->is_tranposed ? matrix->rows : matrix->columns;
 
     //testa se está out of bounds
-    if (row > max_rows || row < 0 || column > max_columns || column < 0){
+    if (row >= max_rows || row < 0 || column >= max_columns || column < 0){
         fprintf(stderr, "ERRO: BUSCA OUT OF BOUNDS");
         exit(1);
     }
@@ -66,7 +75,7 @@ float getElement(HashMatrix matrix, int row, int column){
     int target_row = matrix->is_tranposed ? column : row;
     int target_column = matrix->is_tranposed ? row : column;
 
-    unsigned int index = hash(row, column, matrix->capacity);
+    unsigned int index = hash(target_row, target_column, matrix->capacity);
 
     Node curr = matrix->buckets[index];
     while (curr != NULL){
@@ -85,7 +94,7 @@ void setElement(HashMatrix matrix, int row, int column, float data){
     int max_columns = matrix->is_tranposed ? matrix->rows : matrix->columns;
 
     //testa se está out of bounds
-    if (row > max_rows || row < 0 || column > max_columns || column < 0){
+    if (row >= max_rows || row < 0 || column >= max_columns || column < 0){
         fprintf(stderr, "ERRO: INSERÇÃO OUT OF BOUNDS");
         exit(1);
     }
@@ -93,7 +102,7 @@ void setElement(HashMatrix matrix, int row, int column, float data){
     int target_row = matrix->is_tranposed ? column : row;
     int target_column = matrix->is_tranposed ? row : column;
 
-    unsigned int index = hash(row, column, matrix->capacity);
+    unsigned int index = hash(target_row, target_column, matrix->capacity);
     Node curr = matrix->buckets[index], prev = NULL;
 
     while(curr != NULL){
@@ -106,6 +115,9 @@ void setElement(HashMatrix matrix, int row, int column, float data){
                 }
                 free(curr);
                 matrix->count--;
+                if ((float)matrix->count / matrix->capacity < LOAD_FACTOR_LOWER && matrix->capacity > INITIAL_CAPACITY) {
+                    resize(matrix);
+                }
             } else {
                 curr->data = data;
             }
@@ -116,13 +128,11 @@ void setElement(HashMatrix matrix, int row, int column, float data){
     }
 
     if (data != 0.0){
-        if ((float)(matrix->count+1) / matrix->capacity > LOAD_FACTOR_UPPER){
-            resize(matrix, LOAD_FACTOR_UPPER);
-            index = hash(row, column, matrix->capacity);
-        } else if ((float)(matrix->count+1) / matrix->capacity < LOAD_FACTOR_LOWER){
-            resize(matrix, LOAD_FACTOR_LOWER);
-            index = hash(row, column, matrix->capacity);
+        if ((float)(matrix->count + 1) / matrix->capacity > LOAD_FACTOR_UPPER){
+            resize(matrix);
+            index = hash(target_row, target_column, matrix->capacity);
         }
+        
         Node new_node = malloc(sizeof(struct _node));
         assert(new_node != NULL);
         new_node->column = target_column;
