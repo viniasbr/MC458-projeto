@@ -9,7 +9,7 @@ struct _node {
 
 struct _hashMatrix{
     Node *buckets;
-    int capacity, count, rows, columns;
+    int capacity, count, rows, columns; //capacity = tamanho total do hash, count = num de elementos não nulos
     bool is_tranposed;
 };
 
