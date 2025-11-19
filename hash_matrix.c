@@ -143,7 +143,7 @@ HashMatrix* matrixMultiplication(HashMatrix A, HashMatrix B){
         int row_a = A->buckets[i]->row;
         int column_a = A->buckets[i]->column;
         float data_a = A->buckets[i]->data;
-        
+
         for (int j = 0; j < B->capacity; j++){
             int row_b = B->buckets[j]->row;
             int column_b = B->buckets[j]->column;
@@ -154,7 +154,9 @@ HashMatrix* matrixMultiplication(HashMatrix A, HashMatrix B){
                 temp += data_a * data_b;
                 setElement(C, row_a, column_b, temp);
             }
+        }
     }
+    
     return C;
 }
 
