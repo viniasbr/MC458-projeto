@@ -86,6 +86,7 @@ void setElement(HashMatrix matrix, int row, int column, float data){
 
     if (data != 0.0){
         Node new_node = malloc(sizeof(struct _node));
+        assert(new_node != NULL);
         new_node->column = target_column;
         new_node->row = target_row;
         new_node->data = data;
