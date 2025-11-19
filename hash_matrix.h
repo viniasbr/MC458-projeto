@@ -13,11 +13,10 @@ struct _hashMatrix{
     bool is_tranposed;
 };
 
-
 HashMatrix createHashMatrix(int rows, int columns, int capacity);
 
 float getElement(HashMatrix matrix, int row, int column);
 
-void setElement(HashMatrix matrix, int row, int column);
+void setElement(HashMatrix matrix, int row, int column, float data);
 
 void transpose(HashMatrix matrix);
