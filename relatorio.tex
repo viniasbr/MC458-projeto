@@ -26,31 +26,47 @@
 \begin{document}
     \maketitle
 
-    Nesse projeto, exploraremos duas estruturas de dados que representam matrizes esparsas. Iremos analisar operações e características de cada estrutura, a fim de verificar a eficiência dessas estruturas. Com isso, discutiremos as vantagens e desvantagens das implementações quando comparadas entre si e quando comparadas com representações de matrizes não esparsas.
+    Nesse projeto, exploraremos duas estruturas de dados que representam matrizes esparsas. Iremos analisar operações e características de cada estrutura, a fim de verificar a eficiência dessas estruturas. Com isso, discutiremos as vantagens e desvantagens das implementações quando comparadas entre si e quando comparadas com representações de matrizes não esparsas. 
     
     \section{Descrição das Estruturas}
     \subsection{Estrutura 1 - Hash Table}
-    A Estrutura 1 é uma representação de matrizes esparsas baseada em Hash. Armazenaremos todos os elementos não nulos da matriz em um vetor. O local em que cada elemento é armazenado é baseado em um Hash no número da linha e da coluna. Para lidar com possíveis colisões, cada posição do vetor é uma lista ligada.  O tamanho do vetor é atualizado dinamicamente para manter o Load Factor entre 0.25 e 0.75, o que é feito junto a uma operação de rehash.
+    A Estrutura 1 é uma representação de matrizes esparsas baseada em Hash. Armazenaremos todos os elementos não nulos da matriz em um vetor. O local em que cada elemento é armazenado é baseado em um Hash no número da linha e da coluna. Para lidar com possíveis colisões, cada posição do vetor é uma lista ligada.  O tamanho do vetor é atualizado dinamicamente para manter o Load Factor entre 0.25 e 0.75, o que é feito junto a uma chamada de \texttt{resize}.
     \subsection{Estrutura 2 - AVL}
-    A Estrutura 2 é uma representação de matrizes esparsas baseada em árvores, mais especificamente em árvores AVL. Teremos duas estruturas que fazem parte da matriz: uma árvore interna e uma externa. Cada árvore obedecerá à propriedade de árvore de busca de acordo com o número da linha ou número da coluna. A árvore externa terá como dado o enderço de uma matriz interna, que representa todos os elementos não nulos da matriz que estão na linha/coluna indicada pela árvore externa. A árvore interna terá o número da coluna/linha de cada elemento, assim como o valor do elemento da matriz, que sabemos que está na posição indicada pelos índices das matrizes externa e interna. 
+    A Estrutura 2 é uma representação de matrizes esparsas baseada em árvores, mais especificamente em árvores AVL. Teremos duas estruturas que fazem parte da matriz: uma árvore interna e uma externa. Cada árvore obedecerá à propriedade de árvore de busca de acordo com o número da linha ou número da coluna. A árvore externa terá como dado o endereço de uma matriz interna, que representa todos os elementos não nulos da matriz que estão na linha/coluna indicada pela árvore externa. A árvore interna terá o número da coluna/linha de cada elemento, assim como o valor do elemento da matriz, que sabemos que está na posição indicada pelos índices das matrizes externa e interna. 
     \section{Análise das Complexidades}
     \subsection{Estrutura 1 - Hash Table}
     Para a Estrutura 1, analisaremos a complexidade esperada. O custo de alocação de memória é tido como constante.
     \subsubsection{Complexidade de \texttt{hash}}
-    A operação de Hash inlcui apenas um número constante de operações básicas. Assim, essa função $T(k) \in \Theta(1)$. Porém, analisaremos também a esperança de elementos por bucket, que será usada para a análise da complexidade do caso médio de outras operações.
+    A operação de Hash inclui apenas um número constante de operações básicas. Assim, essa função $T(k) \in \Theta(1)$. Porém, analisaremos também a esperança de elementos por bucket, que será usada para a análise da complexidade do caso médio de outras operações. Como nesse hash a tabela de espalhamento é um vetor, eventualmente será chamada de vetor de espalhamento ou simplesmente de vetor. 
+
+    Vamos presumir que cada par linha coluna $p$ que fazemos o hash tem igual probabilidade de cair em cada bucket em um vetor de tamanho $m$. A probabilidade de $p$ cair no i-ésimo bucket é $\frac{1}{m}$. Se temos $n$ elementos nesse vetor, então a esperança do número de elementos em qualquer bucket é $\frac{n}{m}$. Note que $n$ e $m$ tem uma relação limitada pelo load factor $\alpha$ do hash. Como o aumento ou diminuição do load factor só pode ser feito pela função \texttt{setElement}, e essa função ajusta o tamanho do vetor de espalhamento sempre que o número de elementos sai do intervalo aceitável [0.25, 0.75], então 
+    $$0.25 <\frac{n}{m}<0.75$$
+    Portanto, a esperança do número de elementos por bucket  $T  (k) \in O(1)$.
+
+    
     \subsubsection{Complexidade de \texttt{createHashMatrix}}
-    Nessa operação, alocamos memória de acordo com o Struct \texttt{hashMatrix}, o que tem custo assumido como constante. Então, atribuímos valores iniciais para os 5 campos da Struct, cada atribuição em tempo constante. Então retornamos a matriz. $T  (k) \in \Theta(1)$. 
+    Nessa operação, alocamos memória de acordo com o Struct \texttt{hashMatrix}, o que tem custo assumido como constante. Então, atribuímos valores iniciais para os 5 campos da Struct, cada atribuição em tempo constante. Então retornamos a matriz. $T  (k) \in O(1)$. 
     \subsubsection{Complexidade de \texttt{resize}}
-    Após algumas operações de custo constante, percorremos o vetor de espalhamento, e para cada elemento do vetor, percorremos o bucket associado a ele. Como sabemos que 
+    Após algumas operações de custo constante, percorremos o vetor de espalhamento, e para cada elemento do vetor, percorremos o bucket associado a ele. Como sabemos que, em média, teremos um número constante de elementos por bucket, a classe assintótica é igual ao de só percorrer o vetor.  Para cada elemento do vetor, faremos uma quantidade constante de operações. Além disso, sabemos, pelo número constante de elementos por bucket e pelo limite de Load Factor entre constantes, que o número de elementos no vetor de espalhamento é igual ao número de elementos na matriz multiplicado por uma constante. Portanto, o custo esperado de \texttt{resize} é $T(k) \in O(k)$.
     \subsubsection{Complexidade de \texttt{getElement}}
-    a
+    Nessa função, fazemos um número constante de operações, então executamos a função \texttt{hash}, de custo constante. Então, percorremos o bucket da posição indicada pelo \texttt{hash}. Como já foi discutido, o número esperado de elementos por bucket é constante, portanto, o custo esperado de toda operação é constante, e $T(k) \in O(1)$.
     \subsubsection{Complexidade de \texttt{setElement}}
-    a
+    O custo esperado da operação \texttt{setElement} é parecido ao de \texttt{getElement}. Fazemos um número constante de operações, com exceção da iteração do bucket, que tem número esperado de elementos constante. Portanto, $T(k) \in \Theta(1)$. 
+    Essa operação também serve para remover elementos caso seja atualizado um elemento não nulo com 0, tornando-o nulo. Nesse caso, o custo assintótico não muda.
+    A diferença é que a função pode chamar \texttt{resize} eventualmente, o que faria com que o custo fosse $O(k)$. Porém, vamos verificar o custo amortizado.
+
+    Entendemos como \textit{Load Factor} $\alpha$ a razão entre o número $n$ de elementos no vetor e o número $m$ do tamanho do vetor. Ou seja:
+    $$\alpha = \frac{n}{m}$$
+    Se o hash está entre o $\alpha \_min$ $\alpha \_max$, não fazemos nada. Porém, se o Load Factor ficaria além do intervalo, alteramos o tamanho da tabela com \texttt{resize}. Se o $\alpha$ está perto do limite superior, dobramos o tamanho. Se $\alpha$ está perto do limite inferior, então cortamos o tamanho pela metade. Ou seja, estamos sempre dentro dos limites estipulados para o Load Factor. Sabemos que o custo de \texttt{resize}, como demostrado abaixo, $T(k) \in O(k)$. Porém, em uma sequência sucessiva de inserções, podemos calcular o custo médio por inserção porque sabemos que não é toda inserção que irá levar a um chamado de \texttt{resize}. 
+
+    Considere uma sequência de n inserções. Cada \texttt{resize} custa O(i), sendo i o tamanho atual. O número de inserções que podemos fazer entre cada \texttt{resize} é $\Theta(i)$ porque dobramos o tamanho a cada vez. Portanto, se fazemos uma operação O(i) a cada $\Theta(i)$ inserções, então o custo amortizado da inserção é $O(1 + \frac{O(i)}{\Theta(i)})$, portanto o custo amortizado da inserção $\in O(1)$.
+    
     \subsubsection{Complexidade de \texttt{matrixMultiplication}}
-    a
+    Nessa operação, criamos uma matriz resultado (custo constante). Então percorremos o vetor de espalhamento para a matriz $A$, e então percorremos os buckets do vetor de $A$. Para cada elemento no bucket, percorremos o vetor de espalhamento de $B$, e para cada elemento no vetor de espalhamento de $B$, percorremos o bucket associado. Apesar de ser um laço quadruplamente aninhado, temos limitantes garantidos para o tamanho do vetor com relação a $K$, e temos limitantes esperados do número de elementos por bucket. Além de sabermos que, em todos os buckets de uma matriz $M$, temos exatamente $Km$ elementos. Como já discutido antes, o custo esperado de percorrer o vetor de espalhamento, mesmo se também percorremos os buckets de cada elemento, é linear em $K$. Como percorremos $A$, e $B$ de maneira aninhada, o custo esperado é $T(k) \in O(Ka\cdot Kb)$, sendo $Ka$ o número de elementos na matriz esparsa $A$ e $Kb$ o número de elementos na matriz esparsa $B$.
     \subsubsection{Complexidade de \texttt{matrixAddition}}
-    a
+    Nessa operação, criamos uma matriz resultado (custo constante), então percorremos o vetor de espalhamento para as duas matrizes que serão somadas, $A$ e $B$. Para cada elemento do vetor, percorremos o bucket associado. O custo esperado de percorrer o vetor de espalhamento, mesmo se também percorremos os buckets de cada elemento, é linear em $K$. Como percorremos $A$, e depois $B$, o custo é $T(k) \in O(Ka + Kb)$, sendo $Ka$ o número de elementos na matriz esparsa $A$ e $Kb$ o número de elementos na matriz esparsa $B$.
     \subsubsection{Complexidade de \texttt{matrixScalarMultiplication}}
+    Nessa operação, criamos uma matriz resultado (custo constante), então percorremos o vetor de espalhamento, e para cada elemento do vetor, percorremos o bucket associado. Como já discutido antes, o custo esperado de percorrer o vetor de espalhamento, mesmo se também percorremos os buckets de cada elemento, $T(k) \in O(k)$.
     
     \subsubsection{Complexidade de \texttt{transpose}}
     Essa operação tem somente uma linha, que é uma mudança de um valor booleano para seu oposto. Isso tem custo constante. A forma como a transposição é de fato feita é pela mudança entre linhas e colunas nas outras operações. Portanto $T(k) \in \Theta(1)$.
