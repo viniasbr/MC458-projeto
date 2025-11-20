@@ -25,11 +25,36 @@
 \date{}
 \begin{document}
     \maketitle
+
+    Nesse projeto, exploraremos duas estruturas de dados que representam matrizes esparsas. Iremos analisar operações e características de cada estrutura, a fim de verificar a eficiência dessas estruturas. Com isso, discutiremos as vantagens e desvantagens das implementações quando comparadas entre si e quando comparadas com representações de matrizes não esparsas.
+    
     \section{Descrição das Estruturas}
     \subsection{Estrutura 1 - Hash Table}
+    A Estrutura 1 é uma representação de matrizes esparsas baseada em Hash. Armazenaremos todos os elementos não nulos da matriz em um vetor. O local em que cada elemento é armazenado é baseado em um Hash no número da linha e da coluna. Para lidar com possíveis colisões, cada posição do vetor é uma lista ligada.  O tamanho do vetor é atualizado dinamicamente para manter o Load Factor entre 0.25 e 0.75, o que é feito junto a uma operação de rehash.
     \subsection{Estrutura 2 - AVL}
+    A Estrutura 2 é uma representação de matrizes esparsas baseada em árvores, mais especificamente em árvores AVL. Teremos duas estruturas que fazem parte da matriz: uma árvore interna e uma externa. Cada árvore obedecerá à propriedade de árvore de busca de acordo com o número da linha ou número da coluna. A árvore externa terá como dado o enderço de uma matriz interna, que representa todos os elementos não nulos da matriz que estão na linha/coluna indicada pela árvore externa. A árvore interna terá o número da coluna/linha de cada elemento, assim como o valor do elemento da matriz, que sabemos que está na posição indicada pelos índices das matrizes externa e interna. 
     \section{Análise das Complexidades}
     \subsection{Estrutura 1 - Hash Table}
+    Para a Estrutura 1, analisaremos a complexidade esperada. O custo de alocação de memória é tido como constante.
+    \subsubsection{Complexidade de \texttt{hash}}
+    A operação de Hash inlcui apenas um número constante de operações básicas. Assim, essa função $T(k) \in \Theta(1)$. Porém, analisaremos também a esperança de elementos por bucket, que será usada para a análise da complexidade do caso médio de outras operações.
+    \subsubsection{Complexidade de \texttt{createHashMatrix}}
+    Nessa operação, alocamos memória de acordo com o Struct \texttt{hashMatrix}, o que tem custo assumido como constante. Então, atribuímos valores iniciais para os 5 campos da Struct, cada atribuição em tempo constante. Então retornamos a matriz. $T  (k) \in \Theta(1)$. 
+    \subsubsection{Complexidade de \texttt{resize}}
+    Após algumas operações de custo constante, percorremos o vetor de espalhamento, e para cada elemento do vetor, percorremos o bucket associado a ele. Como sabemos que 
+    \subsubsection{Complexidade de \texttt{getElement}}
+    a
+    \subsubsection{Complexidade de \texttt{setElement}}
+    a
+    \subsubsection{Complexidade de \texttt{matrixMultiplication}}
+    a
+    \subsubsection{Complexidade de \texttt{matrixAddition}}
+    a
+    \subsubsection{Complexidade de \texttt{matrixScalarMultiplication}}
+    
+    \subsubsection{Complexidade de \texttt{transpose}}
+    Essa operação tem somente uma linha, que é uma mudança de um valor booleano para seu oposto. Isso tem custo constante. A forma como a transposição é de fato feita é pela mudança entre linhas e colunas nas outras operações. Portanto $T(k) \in \Theta(1)$.
+    
     \subsection{Estrutura 2 - AVL}
     \begin{table}[h]
         \centering
