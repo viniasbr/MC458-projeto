@@ -151,14 +151,14 @@ HashMatrix* matrixMultiplication(HashMatrix A, HashMatrix B){
 
     for (int i = 0; i < A->capacity; i++){
         while (A->buckets[i] != NULL){
-            int row_a = A->buckets[i]->row;
-            int column_a = A->buckets[i]->column;
+            int row_a = A->is_tranposed ? A->buckets[i]->column : A->buckets[i]->row;
+            int column_a = A->is_tranposed ? A->buckets[i]->row : A->buckets[i]->column;
             float data_a = A->buckets[i]->data;
 
             for (int j = 0; j < B->capacity; j++){
                 while (B->buckets[j] != NULL){
-                    int row_b = B->buckets[j]->row;
-                    int column_b = B->buckets[j]->column;
+                    int row_b = B->is_tranposed ? B->buckets[j]->column : B->buckets[j]->row;
+                    int column_b = B->is_tranposed ? B->buckets[j]->row : B->buckets[j]->column;
                     float data_b = B->buckets[j]->data;
 
                     if (column_a == row_b){
@@ -181,8 +181,8 @@ HashMatrix* matrixAddition(HashMatrix A, HashMatrix B){
 
     for (int i = 0; i < A->capacity; i++){
         while (A->buckets[i] != NULL){
-            int row_a = A->buckets[i]->row;
-            int column_a = A->buckets[i]->column;
+            int row_a = A->is_tranposed ? A->buckets[i]->column : A->buckets[i]->row;
+            int column_a = A->is_tranposed ? A->buckets[i]->row : A->buckets[i]->column;
             float data_a = A->buckets[i]->data;
 
             float temp = getElement(C, row_a, column_a);
@@ -195,8 +195,8 @@ HashMatrix* matrixAddition(HashMatrix A, HashMatrix B){
 
     for (int i = 0; i < B->capacity; i++){
         while (B->buckets[i] != NULL){
-            int row_b = B->buckets[i]->row;
-            int column_b = B->buckets[i]->column;
+            int row_b = B->is_tranposed ? B->buckets[i]->column : B->buckets[i]->row;
+            int column_b = B->is_tranposed ? B->buckets[i]->row : B->buckets[i]->column;
             float data_b = B->buckets[i]->data;
 
             float temp = getElement(C, row_b, column_b);
@@ -215,8 +215,8 @@ HashMatrix* matrixScalarMultiplication(HashMatrix A, float scalar){
 
     for (int i = 0; i < A->capacity; i++){
         while (A->buckets[i] != NULL){
-            int row_a = A->buckets[i]->row;
-            int column_a = A->buckets[i]->column;
+            int row_a = A->is_tranposed ? A->buckets[i]->column : A->buckets[i]->row;
+            int column_a = A->is_tranposed ? A->buckets[i]->row : A->buckets[i]->column;
             float data_a = A->buckets[i]->data;
 
             float temp = data_a * scalar;
