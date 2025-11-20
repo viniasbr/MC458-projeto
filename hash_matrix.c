@@ -7,11 +7,13 @@
 #define LOAD_FACTOR_UPPER 0.75
 #define LOAD_FACTOR_LOWER 0.25
 
+//função hash simples
 unsigned int hash(int row, int column, int capacity){
     unsigned long h = ((unsigned long) row * 31337 + (unsigned long) column * 2731)%capacity;
     return (unsigned int) h;
 }
 
+//cria uma nova matriz hash
 HashMatrix createHashMatrix(int rows, int columns){
     HashMatrix matrix = malloc(sizeof(struct _hashMatrix));
     assert(matrix != NULL);
@@ -28,6 +30,7 @@ HashMatrix createHashMatrix(int rows, int columns){
     return matrix;
 }
 
+//redimensiona a tabela/vetor de espalhamenteo de acrodo com o load factor
 void resize(HashMatrix matrix){
     int new_capacity = matrix->capacity;
     
@@ -61,8 +64,13 @@ void resize(HashMatrix matrix){
     matrix->capacity = new_capacity;
 }
 
-//A princípio é pra ser O(1)
+//pega um elemento da matriz de acrodo com o hash da linha e coluna
 float getElement(HashMatrix matrix, int row, int column){
+    if (matrix == NULL){
+        fprintf(stderr, "MATRIZ NULL");
+        exit(1);
+    }
+
     int max_rows = matrix->is_tranposed ? matrix->columns : matrix->rows;
     int max_columns = matrix->is_tranposed ? matrix->rows : matrix->columns;
 
@@ -88,7 +96,12 @@ float getElement(HashMatrix matrix, int row, int column){
     return 0.0;
 }
 
+//define ou insere um elemento na matriz de acordo com o hash da linha e coluna
 void setElement(HashMatrix matrix, int row, int column, float data){
+    if (matrix == NULL){
+        fprintf(stderr, "MATRIZ NULL");
+        exit(1);
+    }
 
     int max_rows = matrix->is_tranposed ? matrix->columns : matrix->rows;
     int max_columns = matrix->is_tranposed ? matrix->rows : matrix->columns;
@@ -146,14 +159,20 @@ void setElement(HashMatrix matrix, int row, int column, float data){
     }
 }
 
+//multiplica duas matrizes hash
 HashMatrix* matrixMultiplication(HashMatrix A, HashMatrix B){
+    if (A == NULL || B == NULL){
+        fprintf(stderr, "MATRIZ NULL");
+        exit(1);
+    }
+
     HashMatrix C = createHashMatrix(A->rows, B->columns);
 
     for (int i = 0; i < A->capacity; i++){
         while (A->buckets[i] != NULL){
             int row_a = A->is_tranposed ? A->buckets[i]->column : A->buckets[i]->row;
             int column_a = A->is_tranposed ? A->buckets[i]->row : A->buckets[i]->column;
-            float data_a = A->buckets[i]->data;
+            float data_a = A->buckets[i]->data; // aqui eu to percorrendo todos os buckets
 
             for (int j = 0; j < B->capacity; j++){
                 while (B->buckets[j] != NULL){
@@ -176,7 +195,13 @@ HashMatrix* matrixMultiplication(HashMatrix A, HashMatrix B){
     return C;
 }
 
+//soma de matrizes
 HashMatrix* matrixAddition(HashMatrix A, HashMatrix B){
+    if (A == NULL || B == NULL){
+        fprintf(stderr, "MATRIZ NULL");
+        exit(1);
+    }
+
     HashMatrix C = createHashMatrix(A->rows, A->columns);
 
     for (int i = 0; i < A->capacity; i++){
@@ -210,7 +235,13 @@ HashMatrix* matrixAddition(HashMatrix A, HashMatrix B){
     return C;
 }
 
+//multiplicação de matriz por escalar
 HashMatrix* matrixScalarMultiplication(HashMatrix A, float scalar){
+    if (A == NULL){
+        fprintf(stderr, "MATRIZ NULL");
+        exit(1);
+    }
+
     HashMatrix B = createHashMatrix(A->rows, A->columns);
 
     for (int i = 0; i < A->capacity; i++){
@@ -229,6 +260,7 @@ HashMatrix* matrixScalarMultiplication(HashMatrix A, float scalar){
     return B;
 }
 
+//transposição de matriz
 void transpose(HashMatrix matrix){
     //as dimensões não são FISICAMENTE trocadas, mas uma checagem de is_transposed diz qual sua relação
     matrix->is_tranposed = !matrix->is_tranposed;
