@@ -210,6 +210,25 @@ HashMatrix* matrixAddition(HashMatrix A, HashMatrix B){
     return C;
 }
 
+HashMatrix* matrixScalarMultiplication(HashMatrix A, float scalar){
+    HashMatrix B = createHashMatrix(A->rows, A->columns);
+
+    for (int i = 0; i < A->capacity; i++){
+        while (A->buckets[i] != NULL){
+            int row_a = A->buckets[i]->row;
+            int column_a = A->buckets[i]->column;
+            float data_a = A->buckets[i]->data;
+
+            float temp = data_a * scalar;
+            setElement(B, row_a, column_a, temp);
+
+            A->buckets[i] = A->buckets[i]->next;
+        }
+    }
+
+    return B;
+}
+
 void transpose(HashMatrix matrix){
     //as dimensões não são FISICAMENTE trocadas, mas uma checagem de is_transposed diz qual sua relação
     matrix->is_tranposed = !matrix->is_tranposed;
