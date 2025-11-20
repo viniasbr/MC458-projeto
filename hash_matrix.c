@@ -150,23 +150,63 @@ HashMatrix* matrixMultiplication(HashMatrix A, HashMatrix B){
     HashMatrix C = createHashMatrix(A->rows, B->columns);
 
     for (int i = 0; i < A->capacity; i++){
-        int row_a = A->buckets[i]->row;
-        int column_a = A->buckets[i]->column;
-        float data_a = A->buckets[i]->data;
+        while (A->buckets[i] != NULL){
+            int row_a = A->buckets[i]->row;
+            int column_a = A->buckets[i]->column;
+            float data_a = A->buckets[i]->data;
 
-        for (int j = 0; j < B->capacity; j++){
-            int row_b = B->buckets[j]->row;
-            int column_b = B->buckets[j]->column;
-            float data_b = B->buckets[j]->data;
-            
-            if (column_a == row_b){
-                float temp = getElement(C, row_a, column_b);
-                temp += data_a * data_b;
-                setElement(C, row_a, column_b, temp);
+            for (int j = 0; j < B->capacity; j++){
+                while (B->buckets[j] != NULL){
+                    int row_b = B->buckets[j]->row;
+                    int column_b = B->buckets[j]->column;
+                    float data_b = B->buckets[j]->data;
+
+                    if (column_a == row_b){
+                        float temp = getElement(C, row_a, column_b);
+                        temp += data_a * data_b;
+                        setElement(C, row_a, column_b, temp);
+                    }
+                    B->buckets[j] = B->buckets[j]->next;
+                }
             }
+            A->buckets[i] = A->buckets[i]->next;
         }
     }
-    
+
+    return C;
+}
+
+HashMatrix* matrixAddition(HashMatrix A, HashMatrix B){
+    HashMatrix C = createHashMatrix(A->rows, A->columns);
+
+    for (int i = 0; i < A->capacity; i++){
+        while (A->buckets[i] != NULL){
+            int row_a = A->buckets[i]->row;
+            int column_a = A->buckets[i]->column;
+            float data_a = A->buckets[i]->data;
+
+            float temp = getElement(C, row_a, column_a);
+            temp += data_a;
+            setElement(C, row_a, column_a, temp);
+
+            A->buckets[i] = A->buckets[i]->next;
+        }
+    }
+
+    for (int i = 0; i < B->capacity; i++){
+        while (B->buckets[i] != NULL){
+            int row_b = B->buckets[i]->row;
+            int column_b = B->buckets[i]->column;
+            float data_b = B->buckets[i]->data;
+
+            float temp = getElement(C, row_b, column_b);
+            temp += data_b;
+            setElement(C, row_b, column_b, temp);
+
+            B->buckets[i] = B->buckets[i]->next;
+        }
+    }
+
     return C;
 }
 
