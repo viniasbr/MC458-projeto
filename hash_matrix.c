@@ -83,6 +83,8 @@ HashStatus resize(HashMatrix* matrix){
  * A matriz deve ser vazia.
  *
  * @param result ponteiro para a matriz resultado.
+ * @param expected_rows número esperado de linhas.
+ * @param expected_columns número esperado de colunas.
  * @return true se a matriz estiver correta, false caso contrário.
  */
 bool verify_result_matrix(HashMatrix* result, int expected_rows, int expected_columns){
