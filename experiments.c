@@ -11,24 +11,34 @@ static void _allocation_fail(){
 }
 
 void generate_data(int n, int m, int k, int* I, int* J, float* Data){
-    unsigned long long total_cells = (unsigned long long)n * (unsigned long long)m;
-    char *has_been_selected = (char*) calloc(total_cells, sizeof(char));
-    if(!has_been_selected){
+    AVLMatrix* visited = create_matrix_avl(n, m);
+    if(!visited){
         _allocation_fail();
     }
+
     for(int count = 0; count < k;){
         int i = rand() % n;
         int j = rand() % m;
-        unsigned long long pos = (unsigned long long)i * (unsigned long long)m + (unsigned long long)j;
-        if(!has_been_selected[pos]){
-            has_been_selected[pos] = 1;
+
+        float already = 0.0f;
+        AVLStatus status = get_element_avl(visited, i, j, &already);
+        if(status != AVL_STATUS_OK){
+            free_matrix_avl(visited);
+            _allocation_fail();
+        }
+        if(already == 0.0f){
+            status = insert_element_avl(visited, 1.0f, i, j);
+            if(status != AVL_STATUS_OK){
+                free_matrix_avl(visited);
+                _allocation_fail();
+            }
             I[count] = i;
             J[count] = j;
             Data[count] = ((float) rand()) / ((float) RAND_MAX);
             count++;
         }
     }
-    free(has_been_selected);
+    free_matrix_avl(visited);
 }
 
 float** create_dense_matrix(int n, int m){
@@ -133,7 +143,7 @@ static double _delta_t_ns(struct timespec a, struct timespec b){
 
 int main(){
     const int EXPERIMENT_MATRIX_LENGTH[] = {100, 100, 100, 100, 1000, 1000, 1000, 1000, 10000, 10000, 10000, 100000, 100000, 100000, 1000000, 1000000, 1000000};
-    const float EXPERIMENT_SPARSITY[] = {0.01f, 0.05f, 0.1f, 0.2f, 0.01f, 0.05f, 0.1f, 0.2f, 1e-6f, 1e-7f, 1e-8f, 1e-7f, 1e-8f, 1e-9f, 1e-8f, 1e-9f, 1e-10f};
+    const float EXPERIMENT_SPARSITY[] = {0.01f, 0.05f, 0.1f, 0.2f, 0.01f, 0.05f, 0.1f, 0.2f, 1e-8f, 1e-7f, 1e-6f, 1e-9f, 1e-8f, 1e-7f, 1e-10f, 1e-9f, 1e-8f};
     const int NUM_EXPERIMENTS = 17;
 
     FILE *sizeExperimentsFile;
@@ -150,7 +160,7 @@ int main(){
         float sparsity = EXPERIMENT_SPARSITY[experiment];
         unsigned long long side = (unsigned long long)matrix_length;
         unsigned long long cells = side * side;
-        int k = (int) floor((double)cells * (double)sparsity);
+        int k = (int) ceil((double)cells * (double)sparsity);
         int* I = (int*) malloc(sizeof(int) * k);
         int* J = (int*) malloc(sizeof(int) * k);
         float* Data = (float*) malloc(sizeof(float) * k);
