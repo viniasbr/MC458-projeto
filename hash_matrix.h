@@ -2,7 +2,7 @@
 #include <stdbool.h>
 
 /**
- * @file hash_Matrix.h
+ * @file hash_matrix.h
  * @brief Estruturas e operações para matrizes esparsas baseadas em hash.
  */
 
@@ -12,11 +12,11 @@
  * Armazena o índice da linha ou coluna, o valor do elemento não-nulo,
  * e o ponteiro para o próximo nó na lista encadeada do elemento com hash colidido.
  */
-typedef struct node {
+typedef struct Node {
     int row, column;
     float data;
-    struct node* next;
-}node;
+    struct Node* next;
+}Node;
 
 /**
  * @brief Representação de uma matriz esparsa usando tabela de espalhamento (hash table).
@@ -24,24 +24,24 @@ typedef struct node {
  * Armazena os buckets da tabela de espalhamento, capacidade total, número de elementos não nulos,
  * dimensões da matriz (linhas e colunas) e flag de transposição.
  */
-typedef struct hash_matrix{
-    node **buckets;
+typedef struct HashMatrix{
+    Node **buckets;
     int capacity, count, rows, columns; //capacity = tamanho total do hash, count = num de elementos não nulos
     bool is_transposed;
-}hash_matrix;
+}HashMatrix;
 
 /**
  * @brief Códigos de retorno das operações na matriz hash.
  */
 typedef enum {
-    HASH_STATUS_OK = 0,                 /**< Operação concluída com sucesso. */
-    HASH_STATUS_NOT_FOUND = 1,          /**< Elemento solicitado não existe. */
+    HashStatus_OK = 0,                 /**< Operação concluída com sucesso. */
+    HashStatus_NOT_FOUND = 1,          /**< Elemento solicitado não existe. */
     HASH_ERROR_NULL_MATRIX = -1,        /**< Ponteiro de matriz nulo. */
     HASH_ERROR_OUT_OF_BOUNDS = -2,      /**< Índices fora dos limites da matriz. */
     HASH_ERROR_DIMENSION_MISMATCH = -3, /**< Incompatibilidade de dimensões entre matrizes. */
     HASH_ERROR_INVALID_ARGUMENT = -4,   /**< Parâmetro inválido. */
     HASH_ERROR_NOT_IMPLEMENTED = -5     /**< Funcionalidade ainda não implementada. */
-} hash_status;
+} HashStatus;
 
 /**
  * @brief Cria uma nova matriz hash com dimensões especificadas.
@@ -50,7 +50,7 @@ typedef enum {
  * @param columns número de colunas.
  * @return Ponteiro para a nova matriz hash.
  */
-hash_matrix* create_hash_matrix(int rows, int columns);
+HashMatrix* create_hash_matrix(int rows, int columns);
 
 /**
  * @brief Obtém o valor de um elemento da matriz hash.
@@ -60,7 +60,7 @@ hash_matrix* create_hash_matrix(int rows, int columns);
  * @param column índice de coluna.
  * @return valor do elemento na posição (row, column) ou código de erro.
  */
-float get_element(hash_matrix* matrix, int row, int column);
+float get_element_hash(HashMatrix* matrix, int row, int column);
 
 /**
  * @brief Define o valor de um elemento na matriz hash.
@@ -69,9 +69,9 @@ float get_element(hash_matrix* matrix, int row, int column);
  * @param row índice de linha.
  * @param column índice de coluna.
  * @param data valor a ser definido.
- * @return Código ::hash_status indicando sucesso ou motivo da falha.
+ * @return Código ::HashStatus indicando sucesso ou motivo da falha.
  */
-hash_status set_element(hash_matrix* matrix, int row, int column, float data);
+HashStatus set_element_hash(HashMatrix* matrix, int row, int column, float data);
 
 /**
  * @brief Multiplica duas matrizes hash.
@@ -80,7 +80,7 @@ hash_status set_element(hash_matrix* matrix, int row, int column, float data);
  * @param B ponteiro para a matriz hash B.
  * @return Ponteiro para a matriz resultante C.
  */
-hash_matrix* matrix_multiplication(hash_matrix* A, hash_matrix* B);
+HashMatrix* matrix_multiplication_hash(HashMatrix* A, HashMatrix* B);
 
 /**
  * @brief Soma duas matrizes hash.
@@ -89,7 +89,7 @@ hash_matrix* matrix_multiplication(hash_matrix* A, hash_matrix* B);
  * @param B ponteiro para a matriz hash B.
  * @return Ponteiro para a matriz resultante C.
  */
-hash_matrix* matrix_addition(hash_matrix* A, hash_matrix* B);
+HashMatrix* matrix_addition_hash(HashMatrix* A, HashMatrix* B);
 
 /**
  * @brief Multiplica uma matriz hash por um escalar.
@@ -98,20 +98,20 @@ hash_matrix* matrix_addition(hash_matrix* A, hash_matrix* B);
  * @param scalar valor escalar.
  * @return Ponteiro para a nova matriz resultante B.
  */
-hash_matrix* matrix_scalar_multiplication(hash_matrix* A, float scalar);
+HashMatrix* matrix_scalar_multiplication_hash(HashMatrix* A, float scalar);
 
 /**
  * @brief Transpõe a matriz hash.
  * 
  * @param matrix ponteiro para a matriz hash.
- * @return Código ::hash_status indicando sucesso ou motivo da falha.
+ * @return Código ::HashStatus indicando sucesso ou motivo da falha.
  */
-hash_status transpose(hash_matrix* matrix);
+HashStatus transpose_hash(HashMatrix* matrix);
 
 /**
  * @brief Libera a memória alocada para a matriz hash.
  * 
  * @param matrix ponteiro para a matriz hash a ser liberada.
- * @return Código ::hash_status indicando sucesso ou motivo da falha.
+ * @return Código ::HashStatus indicando sucesso ou motivo da falha.
  */
-hash_status free_hash_matrix(hash_matrix* matrix);
+HashStatus free_hash_matrix(HashMatrix* matrix);
