@@ -87,9 +87,23 @@ static unsigned int _dense_matrix_size(int n, int m){
     return ((unsigned int) n) * ((unsigned int) m) * ((unsigned int) sizeof(float));
 }
 
+static unsigned int _bucket_size(Node* bucket){
+    if(!bucket){
+        return 0;
+    }
+
+    return (unsigned int)sizeof(Node) + _bucket_size(bucket->next);
+}
+
 static unsigned int _hash_matrix_size(HashMatrix* matrix){
-    //TODO
-    return 0;
+    if(!matrix){
+        return 0;
+    }
+    unsigned int bucket_acc;
+    for(int i = 0; i < matrix->capacity; i++){
+        bucket_acc = bucket_acc + (unsigned int) sizeof(Node*) + _bucket_size(matrix->buckets[i]);
+    }
+    return (unsigned int) sizeof(HashMatrix) + bucket_acc;
 }
 
 static double _delta_t_ns(struct timespec a, struct timespec b){
