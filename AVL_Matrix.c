@@ -65,7 +65,7 @@ static AVLStatus _validate_matrix(AVLMatrix* matrix){
  * @param j índice de coluna.
  * @return Código ::AVLStatus indicando sucesso ou motivo da falha.
  */
-static AVLStatus _validate_indices(AVLMatrix* matrix, int i, int j){
+static AVLStatus _validate_indexes(AVLMatrix* matrix, int i, int j){
     AVLStatus status = _validate_matrix(matrix);
     if(status != AVL_STATUS_OK){
         return status;

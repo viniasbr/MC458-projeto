@@ -7,15 +7,25 @@
 #define LOAD_FACTOR_UPPER 0.75
 #define LOAD_FACTOR_LOWER 0.25
 
-//função hash simples
+/**
+ * @brief retorna um hash dados inteiros de linha, coluna, e capacidade.
+ *
+ * @param row índice de linha.
+ * @param column índice de coluna.
+ * @param capacity capacidade total da tabela de espalhamento.
+ * @return o hash calculado.
+ */
 unsigned int hash(int row, int column, int capacity){
     unsigned long h = ((unsigned long) row * 31337 + (unsigned long) column * 2731)%capacity;
     return (unsigned int) h;
 }
 
-//cria uma nova matriz hash
-HashMatrix createHashMatrix(int rows, int columns){
-    HashMatrix matrix = malloc(sizeof(struct _hashMatrix));
+hash_matrix* create_hash_matrix(int rows, int columns){
+    if (rows < 0 || columns < 0){
+        return HASH_ERROR_INVALID_ARGUMENT;
+    }
+
+    hash_matrix* matrix = malloc(sizeof(struct hash_matrix));
     assert(matrix != NULL);
 
     matrix->rows = rows;
@@ -24,14 +34,23 @@ HashMatrix createHashMatrix(int rows, int columns){
     matrix->count = 0;
     matrix->is_transposed = false;
 
-    matrix->buckets = calloc(INITIAL_CAPACITY, sizeof(Node));
+    matrix->buckets = calloc(INITIAL_CAPACITY, sizeof(node));
     assert(matrix->buckets != NULL);
 
     return matrix;
 }
 
-//redimensiona a tabela/vetor de espalhamento de acordo com o load factor
-void resize(HashMatrix matrix){
+/**
+ * @brief Redimensiona a tabela de espalhamento da matriz hash.
+ *
+ * @param matrix ponteiro para a matriz hash a ser redimensionada.
+ * @return Código ::hash_status indicando sucesso ou motivo da falha.
+ */
+hash_status resize(hash_matrix* matrix){
+    if (matrix == NULL){
+        return HASH_ERROR_NULL_MATRIX;
+    }
+
     int new_capacity = matrix->capacity;
     
     if ((float)(matrix->count+1) / matrix->capacity > LOAD_FACTOR_UPPER){
@@ -41,16 +60,16 @@ void resize(HashMatrix matrix){
     }
 
     if (new_capacity == matrix->capacity){
-        return;
+        return HASH_STATUS_OK;
     }
 
-    Node *new_buckets = calloc(new_capacity, sizeof(Node));
+    node **new_buckets = calloc(new_capacity, sizeof(node));
     assert(new_buckets != NULL);
 
     for(int i = 0; i < matrix->capacity; i++){
-        Node curr = matrix->buckets[i];
+        node* curr = matrix->buckets[i];
         while (curr != NULL){
-            Node next = curr->next;
+            node* next = curr->next;
             unsigned long new_index = hash(curr->row, curr->column, new_capacity);
 
             curr->next = new_buckets[new_index];
@@ -62,22 +81,20 @@ void resize(HashMatrix matrix){
     free(matrix->buckets);
     matrix->buckets = new_buckets;
     matrix->capacity = new_capacity;
+
+    return HASH_STATUS_OK;
 }
 
-//pega um elemento da matriz de acordo com o hash da linha e coluna
-float getElement(HashMatrix matrix, int row, int column){
+float get_element(hash_matrix* matrix, int row, int column){
     if (matrix == NULL){
-        fprintf(stderr, "MATRIZ NULL");
-        exit(1);
+        return HASH_ERROR_NULL_MATRIX;
     }
 
     int max_rows = matrix->is_transposed ? matrix->columns : matrix->rows;
     int max_columns = matrix->is_transposed ? matrix->rows : matrix->columns;
 
-    //testa se está out of bounds
     if (row >= max_rows || row < 0 || column >= max_columns || column < 0){
-        fprintf(stderr, "ERRO: BUSCA OUT OF BOUNDS");
-        exit(1);
+        return HASH_ERROR_OUT_OF_BOUNDS;
     }
 
     int target_row = matrix->is_transposed ? column : row;
@@ -85,7 +102,7 @@ float getElement(HashMatrix matrix, int row, int column){
 
     unsigned int index = hash(target_row, target_column, matrix->capacity);
 
-    Node curr = matrix->buckets[index];
+    node* curr = matrix->buckets[index];
     while (curr != NULL){
         if (curr->row == target_row && curr->column == target_column){
             return curr->data;
@@ -96,27 +113,24 @@ float getElement(HashMatrix matrix, int row, int column){
     return 0.0;
 }
 
-//define ou insere um elemento na matriz de acordo com o hash da linha e coluna
-void setElement(HashMatrix matrix, int row, int column, float data){
+hash_status set_element(hash_matrix* matrix, int row, int column, float data){
     if (matrix == NULL){
-        fprintf(stderr, "MATRIZ NULL");
-        exit(1);
+        return HASH_ERROR_NULL_MATRIX;
     }
 
     int max_rows = matrix->is_transposed ? matrix->columns : matrix->rows;
     int max_columns = matrix->is_transposed ? matrix->rows : matrix->columns;
 
-    //testa se está out of bounds
     if (row >= max_rows || row < 0 || column >= max_columns || column < 0){
-        fprintf(stderr, "ERRO: INSERÇÃO OUT OF BOUNDS");
-        exit(1);
+        return HASH_ERROR_OUT_OF_BOUNDS;
     }
 
     int target_row = matrix->is_transposed ? column : row;
     int target_column = matrix->is_transposed ? row : column;
 
     unsigned int index = hash(target_row, target_column, matrix->capacity);
-    Node curr = matrix->buckets[index], prev = NULL;
+    node* curr = matrix->buckets[index];
+    node* prev = NULL;
 
     while(curr != NULL){
         if (curr->row == target_row && curr->column == target_column){
@@ -146,7 +160,7 @@ void setElement(HashMatrix matrix, int row, int column, float data){
             index = hash(target_row, target_column, matrix->capacity);
         }
         
-        Node new_node = malloc(sizeof(struct _node));
+        node* new_node = malloc(sizeof(node));
         assert(new_node != NULL);
         new_node->column = target_column;
         new_node->row = target_row;
@@ -159,109 +173,157 @@ void setElement(HashMatrix matrix, int row, int column, float data){
     }
 }
 
-//multiplica duas matrizes hash
-HashMatrix matrixMultiplication(HashMatrix A, HashMatrix B){
+hash_matrix* matrix_multiplication(hash_matrix* A, hash_matrix* B){
     if (A == NULL || B == NULL){
-        fprintf(stderr, "MATRIZ NULL");
-        exit(1);
+        return HASH_ERROR_NULL_MATRIX;
     }
 
-    HashMatrix C = createHashMatrix(A->rows, B->columns);
+    if (A->is_transposed && B->is_transposed){
+        if (A->columns != B->rows){
+            return HASH_ERROR_DIMENSION_MISMATCH;
+        }
+    } else if (A->is_transposed && !B->is_transposed){
+        if (A->columns != B->columns){
+            return HASH_ERROR_DIMENSION_MISMATCH;
+        }
+    } else if (!A->is_transposed && B->is_transposed){
+        if (A->rows != B->rows){
+            return HASH_ERROR_DIMENSION_MISMATCH;
+        }
+    } else {
+        if (A->rows != B->columns){
+            return HASH_ERROR_DIMENSION_MISMATCH;
+        }
+    }
+
+    hash_matrix* C = createhash_matrix(A->rows, B->columns);
+    
+    node* current_bucket_A = NULL;
+    node* current_bucket_B = NULL;
 
     for (int i = 0; i < A->capacity; i++){
-        while (A->buckets[i] != NULL){
-            int row_a = A->is_transposed ? A->buckets[i]->column : A->buckets[i]->row;
-            int column_a = A->is_transposed ? A->buckets[i]->row : A->buckets[i]->column;
-            float data_a = A->buckets[i]->data; // aqui eu to percorrendo todos os buckets
+        current_bucket_A = A->buckets[i];
+
+        while (current_bucket_A != NULL){
+            int row_a = A->is_transposed ? current_bucket_A->column : current_bucket_A->row;
+            int column_a = A->is_transposed ? current_bucket_A->row : current_bucket_A->column;
+            float data_a = current_bucket_A->data;
 
             for (int j = 0; j < B->capacity; j++){
-                while (B->buckets[j] != NULL){
-                    int row_b = B->is_transposed ? B->buckets[j]->column : B->buckets[j]->row;
-                    int column_b = B->is_transposed ? B->buckets[j]->row : B->buckets[j]->column;
-                    float data_b = B->buckets[j]->data;
+                current_bucket_B = B->buckets[j];
+                while (current_bucket_B != NULL){
+                    int row_b = B->is_transposed ? current_bucket_B->column : current_bucket_B->row;
+                    int column_b = B->is_transposed ? current_bucket_B->row : current_bucket_B->column;
+                    float data_b = current_bucket_B->data;
 
                     if (column_a == row_b){
                         float temp = getElement(C, row_a, column_b);
                         temp += data_a * data_b;
                         setElement(C, row_a, column_b, temp);
                     }
-                    B->buckets[j] = B->buckets[j]->next;
+                    current_bucket_B = current_bucket_B->next;
                 }
             }
-            A->buckets[i] = A->buckets[i]->next;
+            current_bucket_A = current_bucket_A->next;
         }
     }
 
     return C;
 }
 
-//soma de matrizes
-HashMatrix matrixAddition(HashMatrix A, HashMatrix B){
+hash_matrix* matrix_addition(hash_matrix* A, hash_matrix* B){
     if (A == NULL || B == NULL){
         fprintf(stderr, "MATRIZ NULL");
         exit(1);
     }
 
-    HashMatrix C = createHashMatrix(A->rows, A->columns);
+    hash_matrix* C = createhash_matrix(A->rows, A->columns);
+
+    node* current_bucket = NULL;
 
     for (int i = 0; i < A->capacity; i++){
-        while (A->buckets[i] != NULL){
-            int row_a = A->is_transposed ? A->buckets[i]->column : A->buckets[i]->row;
-            int column_a = A->is_transposed ? A->buckets[i]->row : A->buckets[i]->column;
-            float data_a = A->buckets[i]->data;
+        current_bucket = A->buckets[i];
+
+        while (current_bucket != NULL){
+            int row_a = A->is_transposed ? current_bucket->column : current_bucket->row;
+            int column_a = A->is_transposed ? current_bucket->row : current_bucket->column;
+            float data_a = current_bucket->data;
 
             float temp = getElement(C, row_a, column_a);
             temp += data_a;
             setElement(C, row_a, column_a, temp);
 
-            A->buckets[i] = A->buckets[i]->next;
+            current_bucket = current_bucket->next;
         }
     }
 
     for (int i = 0; i < B->capacity; i++){
-        while (B->buckets[i] != NULL){
-            int row_b = B->is_transposed ? B->buckets[i]->column : B->buckets[i]->row;
-            int column_b = B->is_transposed ? B->buckets[i]->row : B->buckets[i]->column;
-            float data_b = B->buckets[i]->data;
+        current_bucket = B->buckets[i];
+
+        while (current_bucket != NULL){
+            int row_b = B->is_transposed ? current_bucket->column : current_bucket->row;
+            int column_b = B->is_transposed ? current_bucket->row : current_bucket->column;
+            float data_b = current_bucket->data;
 
             float temp = getElement(C, row_b, column_b);
             temp += data_b;
             setElement(C, row_b, column_b, temp);
 
-            B->buckets[i] = B->buckets[i]->next;
+            current_bucket = current_bucket->next;
         }
     }
 
     return C;
 }
 
-//multiplicação de matriz por escalar
-HashMatrix matrixScalarMultiplication(HashMatrix A, float scalar){
+hash_matrix* matrix_scalar_multiplication(hash_matrix* A, float scalar){
     if (A == NULL){
-        fprintf(stderr, "MATRIZ NULL");
-        exit(1);
+        return HASH_ERROR_NULL_MATRIX;
     }
 
-    HashMatrix B = createHashMatrix(A->rows, A->columns);
+    hash_matrix* B = createhash_matrix(A->rows, A->columns);
+
+    node* current_bucket = NULL;
 
     for (int i = 0; i < A->capacity; i++){
-        while (A->buckets[i] != NULL){
-            int row_a = A->is_transposed ? A->buckets[i]->column : A->buckets[i]->row;
-            int column_a = A->is_transposed ? A->buckets[i]->row : A->buckets[i]->column;
-            float data_a = A->buckets[i]->data;
+        current_bucket = A->buckets[i];
+
+        while (current_bucket != NULL){
+            int row_a = A->is_transposed ? current_bucket->column : current_bucket->row;
+            int column_a = A->is_transposed ? current_bucket->row : current_bucket->column;
+            float data_a = current_bucket->data;
 
             float temp = data_a * scalar;
             setElement(B, row_a, column_a, temp);
 
-            A->buckets[i] = A->buckets[i]->next;
+            current_bucket = current_bucket->next;
         }
     }
 
     return B;
 }
 
-//transposição de matriz
-void transpose(HashMatrix matrix){
-    //as dimensões não são FISICAMENTE trocadas, mas uma checagem de is_transposed diz qual sua relação
+hash_status transpose(hash_matrix* matrix){
+    if (matrix == NULL){
+    return HASH_ERROR_NULL_MATRIX;
+    }
     matrix->is_transposed = !matrix->is_transposed;
+    return HASH_STATUS_OK;
+}
+
+hash_status free_hash_matrix(hash_matrix* matrix){
+    if (matrix == NULL){
+        return HASH_ERROR_NULL_MATRIX;
+    }
+    for (int i = 0; i < matrix->capacity; i++){
+        node* curr = matrix->buckets[i];
+        while (curr != NULL){
+            node* next = curr->next;
+            free(curr);
+            curr = next;
+        }
+    }
+    free(matrix->buckets);
+    free(matrix);
+    return HASH_STATUS_OK;
 }
