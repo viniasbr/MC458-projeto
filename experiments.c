@@ -22,6 +22,7 @@ void generate_data(int n, int m, int k, int* I, int* J, float* Data){
             I[count] = i;
             J[count] = j;
             Data[count] = ((float) rand()) / ((float) RAND_MAX);
+            count++;
         }
     }
     free(has_been_selected);
@@ -42,9 +43,10 @@ float** create_dense_matrix(int n, int m){
             _allocation_fail();
         }
     }
+    return matrix;
 }
 
-void fill_matrices(float** regular_matrix, AVLMatrix* avl_matrix, HashMatrix hash_matrix, int k, int* I, int* J, float* Data){
+void fill_matrices(float** regular_matrix, AVLMatrix* avl_matrix, HashMatrix* hash_matrix, int k, int* I, int* J, float* Data){
     for(int count = 0; count < k; count++){
         AVLStatus status;
         regular_matrix[I[count]][J[count]] = Data[count];
@@ -99,7 +101,7 @@ static unsigned int _hash_matrix_size(HashMatrix* matrix){
     if(!matrix){
         return 0;
     }
-    unsigned int bucket_acc;
+    unsigned int bucket_acc = 0;
     for(int i = 0; i < matrix->capacity; i++){
         bucket_acc = bucket_acc + (unsigned int) sizeof(Node*) + _bucket_size(matrix->buckets[i]);
     }
