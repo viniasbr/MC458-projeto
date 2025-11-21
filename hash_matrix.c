@@ -8,6 +8,16 @@
 #define LOAD_FACTOR_LOWER 0.25
 
 /**
+ * @brief Encerramento imediato em caso de falha de alocação.
+ *
+ * Imprime uma mensagem de erro em stderr e aborta o processo usando EXIT_FAILURE.
+ */
+static void _allocation_fail(){
+    fprintf(stderr, "Error: memory allocation failed.\n");
+    exit(EXIT_FAILURE);
+}
+
+/**
  * @brief retorna um hash dados inteiros de linha, coluna, e capacidade.
  *
  * @param row índice de linha.
@@ -44,7 +54,9 @@ hash_status resize(hash_matrix* matrix){
     }
 
     node **new_buckets = calloc(new_capacity, sizeof(node));
-    assert(new_buckets != NULL);
+    if (new_buckets == NULL){
+        _allocation_fail();
+    }
 
     for(int i = 0; i < matrix->capacity; i++){
         node* curr = matrix->buckets[i];
@@ -71,7 +83,9 @@ hash_matrix* create_hash_matrix(int rows, int columns){
     }
 
     hash_matrix* matrix = malloc(sizeof(struct hash_matrix));
-    assert(matrix != NULL);
+    if (matrix == NULL){
+        _allocation_fail();
+    } 
 
     matrix->rows = rows;
     matrix->columns = columns;
@@ -80,7 +94,10 @@ hash_matrix* create_hash_matrix(int rows, int columns){
     matrix->is_transposed = false;
 
     matrix->buckets = calloc(INITIAL_CAPACITY, sizeof(node));
-    assert(matrix->buckets != NULL);
+    if (matrix->buckets == NULL){
+        free(matrix);
+        _allocation_fail();
+    }
 
     return matrix;
 }
@@ -161,7 +178,9 @@ hash_status set_element(hash_matrix* matrix, int row, int column, float data){
         }
         
         node* new_node = malloc(sizeof(node));
-        assert(new_node != NULL);
+        if (new_node == NULL){
+            _allocation_fail();
+        }
         new_node->column = target_column;
         new_node->row = target_row;
         new_node->data = data;
