@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "hash_matrix.h"
 #include "AVL_Matrix.h"
 
@@ -26,7 +27,7 @@ void generate_data(int n, int m, int k, int* I, int* J, float* Data){
     free(has_been_selected);
 }
 
-float** create_matrix(int n, int m){
+float** create_dense_matrix(int n, int m){
     float** matrix = (float**) malloc(n * sizeof(float*));
     if(!matrix){
         _allocation_fail();
@@ -54,4 +55,43 @@ void fill_matrices(float** regular_matrix, AVLMatrix* avl_matrix, HashMatrix has
         }
         setElement(hash_matrix, I[count], J[count], Data[count]);
     }
+}
+
+static unsigned int _count_i_nodes_size(InnerNode* inner_tree){
+    if(!inner_tree){
+        return 0;
+    }
+
+    unsigned int left = _count_i_nodes_size(inner_tree-> left);
+    unsigned int right = _count_i_nodes_size(inner_tree->right);
+    return left+right+((unsigned int)sizeof(InnerNode));
+}
+
+static unsigned int _count_o_nodes_size(OuterNode* outer_tree){
+    if(!outer_tree){
+        return 0;
+    }
+    unsigned int left = _count_o_nodes_size(outer_tree->left);
+    unsigned int right = _count_o_nodes_size(outer_tree->right);
+    return left + right + ((unsigned int)sizeof(OuterNode)) + _count_i_nodes_size(outer_tree->inner_tree);
+}
+
+static unsigned int _avl_matrix_size(AVLMatrix* matrix){
+    if(!matrix){
+        return 0;
+    }
+    return ((unsigned int)sizeof(AVLMatrix)) + _count_o_nodes_size(matrix->main_root) + _count_o_nodes_size(matrix->transposed_root); 
+}
+
+static unsigned int _dense_matrix_size(int n, int m){
+    return ((unsigned int) n) * ((unsigned int) m) * ((unsigned int) sizeof(float));
+}
+
+static unsigned int _hash_matrix_size(HashMatrix* matrix){
+    //TODO
+    return 0;
+}
+
+static double _delta_t_ns(struct timespec a, struct timespec b){
+    return (b.tv_sec - a.tv_sec) * 1e9 + (b.tv_nsec - a.tv_nsec);
 }
