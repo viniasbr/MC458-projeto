@@ -11,15 +11,17 @@ static void _allocation_fail(){
 }
 
 void generate_data(int n, int m, int k, int* I, int* J, float* Data){
-    char *has_been_selected = (char*) calloc(n*m, sizeof(char));
+    unsigned long long total_cells = (unsigned long long)n * (unsigned long long)m;
+    char *has_been_selected = (char*) calloc(total_cells, sizeof(char));
     if(!has_been_selected){
         _allocation_fail();
     }
     for(int count = 0; count < k;){
         int i = rand() % n;
         int j = rand() % m;
-        if(!has_been_selected[i*m + j]){
-            has_been_selected[i*m + j] = 1;
+        unsigned long long pos = (unsigned long long)i * (unsigned long long)m + (unsigned long long)j;
+        if(!has_been_selected[pos]){
+            has_been_selected[pos] = 1;
             I[count] = i;
             J[count] = j;
             Data[count] = ((float) rand()) / ((float) RAND_MAX);
@@ -76,53 +78,53 @@ HashStatus fill_hash_matrix(HashMatrix* matrix, int k, int* I, int* J, float* Da
     return HASH_STATUS_OK;
 }
 
-static unsigned int _count_i_nodes_size(InnerNode* inner_tree){
+static unsigned long long int _count_i_nodes_size(InnerNode* inner_tree){
     if(!inner_tree){
         return 0;
     }
 
-    unsigned int left = _count_i_nodes_size(inner_tree-> left);
-    unsigned int right = _count_i_nodes_size(inner_tree->right);
-    return left+right+((unsigned int)sizeof(InnerNode));
+    unsigned long long int left = _count_i_nodes_size(inner_tree-> left);
+    unsigned long long int right = _count_i_nodes_size(inner_tree->right);
+    return left + right + (unsigned long long int)sizeof(InnerNode);
 }
 
-static unsigned int _count_o_nodes_size(OuterNode* outer_tree){
+static unsigned long long int _count_o_nodes_size(OuterNode* outer_tree){
     if(!outer_tree){
         return 0;
     }
-    unsigned int left = _count_o_nodes_size(outer_tree->left);
-    unsigned int right = _count_o_nodes_size(outer_tree->right);
-    return left + right + ((unsigned int)sizeof(OuterNode)) + _count_i_nodes_size(outer_tree->inner_tree);
+    unsigned long long int left = _count_o_nodes_size(outer_tree->left);
+    unsigned long long int right = _count_o_nodes_size(outer_tree->right);
+    return left + right + (unsigned long long int)sizeof(OuterNode) + _count_i_nodes_size(outer_tree->inner_tree);
 }
 
-static unsigned int _avl_matrix_size(AVLMatrix* matrix){
+static unsigned long long int _avl_matrix_size(AVLMatrix* matrix){
     if(!matrix){
         return 0;
     }
-    return ((unsigned int)sizeof(AVLMatrix)) + _count_o_nodes_size(matrix->main_root) + _count_o_nodes_size(matrix->transposed_root); 
+    return (unsigned long long int)sizeof(AVLMatrix) + _count_o_nodes_size(matrix->main_root) + _count_o_nodes_size(matrix->transposed_root); 
 }
 
-static unsigned int _dense_matrix_size(int n, int m){
-    return ((unsigned int) n) * ((unsigned int) m) * ((unsigned int) sizeof(float));
+static unsigned long long int _dense_matrix_size(int n, int m){
+    return (unsigned long long int)n * (unsigned long long int)m * (unsigned long long int)sizeof(float);
 }
 
-static unsigned int _bucket_size(Node* bucket){
+static unsigned long long int _bucket_size(Node* bucket){
     if(!bucket){
         return 0;
     }
 
-    return (unsigned int)sizeof(Node) + _bucket_size(bucket->next);
+    return (unsigned long long int)sizeof(Node) + _bucket_size(bucket->next);
 }
 
-static unsigned int _hash_matrix_size(HashMatrix* matrix){
+static unsigned long long int _hash_matrix_size(HashMatrix* matrix){
     if(!matrix){
         return 0;
     }
-    unsigned int bucket_acc = 0;
+    unsigned long long int bucket_acc = 0;
     for(int i = 0; i < matrix->capacity; i++){
-        bucket_acc = bucket_acc + (unsigned int) sizeof(Node*) + _bucket_size(matrix->buckets[i]);
+        bucket_acc = bucket_acc + (unsigned long long int) sizeof(Node*) + _bucket_size(matrix->buckets[i]);
     }
-    return (unsigned int) sizeof(HashMatrix) + bucket_acc;
+    return (unsigned long long int) sizeof(HashMatrix) + bucket_acc;
 }
 
 static double _delta_t_ns(struct timespec a, struct timespec b){
@@ -146,7 +148,9 @@ int main(){
     for(int experiment = 0; experiment < NUM_EXPERIMENTS; experiment++){ //Experimentos de tamanho na memória
         int matrix_length = EXPERIMENT_MATRIX_LENGTH[experiment];
         float sparsity = EXPERIMENT_SPARSITY[experiment];
-        int k = (int) floor(matrix_length * matrix_length * sparsity);
+        unsigned long long side = (unsigned long long)matrix_length;
+        unsigned long long cells = side * side;
+        int k = (int) floor((double)cells * (double)sparsity);
         int* I = (int*) malloc(sizeof(int) * k);
         int* J = (int*) malloc(sizeof(int) * k);
         float* Data = (float*) malloc(sizeof(float) * k);
@@ -163,7 +167,7 @@ int main(){
             _allocation_fail();
         }
         generate_data(matrix_length, matrix_length, k, I, J, Data);
-        unsigned int dense_matrix_size = _dense_matrix_size(matrix_length, matrix_length);
+        unsigned long long int dense_matrix_size = _dense_matrix_size(matrix_length, matrix_length);
         AVLMatrix* avlmatrix;
         avlmatrix = create_matrix_avl(matrix_length, matrix_length);
         AVLStatus avlstatus = fill_avl_matrix(avlmatrix, k, I, J, Data);
@@ -177,7 +181,7 @@ int main(){
             fclose(sizeExperimentsFile);
             return 1;
         }
-        unsigned int avlmatrix_size = _avl_matrix_size(avlmatrix);
+        unsigned long long int avlmatrix_size = _avl_matrix_size(avlmatrix);
         free_matrix_avl(avlmatrix);
         HashMatrix* hashmatrix;
         hashmatrix = create_hash_matrix(matrix_length, matrix_length);
@@ -191,10 +195,10 @@ int main(){
             fclose(sizeExperimentsFile);
             return 1;
         }
-        unsigned int hashmatrix_size = _hash_matrix_size(hashmatrix);
+        unsigned long long int hashmatrix_size = _hash_matrix_size(hashmatrix);
         free_hash_matrix(hashmatrix);
 
-        fprintf(sizeExperimentsFile, "%d, %.12f, %d, %u, %u, %u\n",
+        fprintf(sizeExperimentsFile, "%d, %.12f, %d, %llu, %llu, %llu\n",
                 matrix_length, sparsity, k,
                 dense_matrix_size, avlmatrix_size, hashmatrix_size);
 
