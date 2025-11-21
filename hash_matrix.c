@@ -193,7 +193,7 @@ HashStatus set_element_hash(HashMatrix* matrix, int row, int column, float data)
             } else {
                 curr->data = data;
             }
-            return;
+            return HASH_STATUS_OK;
         }
         prev = curr;
         curr = curr->next;
