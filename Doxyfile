@@ -1,0 +1,26 @@
+PROJECT_NAME           = "AVL Matrix"
+PROJECT_BRIEF          = "Implementação de matriz esparsa com arvores AVL"
+OUTPUT_DIRECTORY       = docs/doxygen
+
+OUTPUT_LANGUAGE        = Portuguese
+INPUT_ENCODING         = UTF-8
+
+INPUT                  = AVL_Matrix.h \
+                         AVL_Matrix.c
+FILE_PATTERNS          = *.h \
+                         *.c
+RECURSIVE              = NO
+
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_LOCAL_CLASSES  = NO
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = YES
+GENERATE_TREEVIEW      = YES
+HAVE_DOT               = YES
+
+WARN_IF_UNDOCUMENTED   = YES
+WARNINGS               = YES
+QUIET                  = NO

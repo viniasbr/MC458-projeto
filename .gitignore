@@ -91,3 +91,7 @@ dkms.conf
 
 # latexmk & minted caches
 _minted*
+
+
+#Doxygen
+docs

@@ -2,6 +2,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/**
+ * @file AVL_Matrix.c
+ * @brief Implementação de matriz esparsa com duas árvores AVL (linhas e colunas).
+ *
+ * O arquivo contém funções internas de balanceamento e validação, além das
+ * operações públicas declaradas em AVL_Matrix.h.
+ */
+
+/**
+ * @brief Encerramento imediato em caso de falha de alocação.
+ *
+ * Imprime uma mensagem de erro em stderr e aborta o processo usando EXIT_FAILURE.
+ */
 static void _allocation_fail(){
     fprintf(stderr, "Error: memory allocation failed.\n");
     exit(EXIT_FAILURE);
@@ -28,6 +41,12 @@ const char* avl_status_string(AVLStatus status){
     }
 }
 
+/**
+ * @brief Valida ponteiro da matriz e dimensões armazenadas.
+ *
+ * @param matrix ponteiro para a matriz a ser checada.
+ * @return Código ::AVLStatus indicando sucesso ou motivo da falha.
+ */
 static AVLStatus _validate_matrix(AVLMatrix* matrix){
     if(!matrix){
         return AVL_ERROR_NULL_MATRIX;
@@ -38,6 +57,14 @@ static AVLStatus _validate_matrix(AVLMatrix* matrix){
     return AVL_STATUS_OK;
 }
 
+/**
+ * @brief Verifica se índices i,j estão dentro dos limites da matriz.
+ *
+ * @param matrix matriz onde a posição será utilizada.
+ * @param i índice de linha.
+ * @param j índice de coluna.
+ * @return Código ::AVLStatus indicando sucesso ou motivo da falha.
+ */
 static AVLStatus _validate_indices(AVLMatrix* matrix, int i, int j){
     AVLStatus status = _validate_matrix(matrix);
     if(status != AVL_STATUS_OK){
@@ -49,6 +76,13 @@ static AVLStatus _validate_indices(AVLMatrix* matrix, int i, int j){
     return AVL_STATUS_OK;
 }
 
+/**
+ * @brief Garante que duas matrizes têm dimensões compatíveis (mesma ordem).
+ *
+ * @param A primeira matriz.
+ * @param B segunda matriz.
+ * @return Código ::AVLStatus indicando sucesso ou motivo da falha.
+ */
 static AVLStatus _validate_same_dimensions(AVLMatrix* A, AVLMatrix* B){
     AVLStatus status = _validate_matrix(A);
     if(status != AVL_STATUS_OK){
@@ -64,29 +98,64 @@ static AVLStatus _validate_same_dimensions(AVLMatrix* A, AVLMatrix* B){
     return AVL_STATUS_OK;
 }
 
+/**
+ * @brief Retorna altura de um nó da árvore interna (0 se nulo).
+ *
+ * @param tree nó cuja altura é consultada.
+ */
 static int _height_i(InnerNode* tree){
     if(!tree){
         return 0; 
     }
     return tree->height;
 }
+/**
+ * @brief Retorna altura de um nó da árvore externa (0 se nulo).
+ *
+ * @param tree nó cuja altura é consultada.
+ */
 static int _height_o(OuterNode* tree){
     if(!tree){
         return 0; 
     }
     return tree->height;
 }
+/**
+ * @brief Calcula fator de balanceamento (altura esquerda - altura direita) da árvore interna.
+ *
+ * @param tree raiz da subárvore interna.
+ */
 static int _balance_factor_i(InnerNode* tree){
     return _height_i(tree->left) - _height_i(tree->right);
 }
+/**
+ * @brief Calcula fator de balanceamento (altura esquerda - altura direita) da árvore externa.
+ *
+ * @param tree raiz da subárvore externa.
+ */
 static int _balance_factor_o(OuterNode* tree){
     return _height_o(tree->left) - _height_o(tree->right);
 }
 
+/**
+ * @brief Retorna o maior entre dois inteiros.
+ *
+ * @param a primeiro inteiro.
+ * @param b segundo inteiro.
+ */
 static int _max(int a, int b) {
     return (a > b) ? a : b;
 }
 
+/**
+ * @brief Rotação à esquerda na árvore interna.
+ *
+ * Rotação usada para o rebalanceamento da árvore
+ * AVL interna.
+ *
+ * @param tree raiz desbalanceada.
+ * @return Nova raiz após rotação.
+ */
 static InnerNode* _left_rotate_i(InnerNode* tree){
     InnerNode* right = tree->right;
     tree -> right = right->left;
@@ -97,6 +166,15 @@ static InnerNode* _left_rotate_i(InnerNode* tree){
     return right;
 }
 
+/**
+ * @brief Rotação à direita na árvore interna.
+ *
+ * Rotação usada para o rebalanceamento da árvore
+ * AVL interna.
+ *
+ * @param tree raiz desbalanceada.
+ * @return Nova raiz após rotação.
+ */
 static InnerNode* _right_rotate_i(InnerNode* tree){
     InnerNode* left = tree->left;
     tree -> left = left-> right;
@@ -107,6 +185,15 @@ static InnerNode* _right_rotate_i(InnerNode* tree){
     return left;
 }
 
+/**
+ * @brief Rotação à esquerda na árvore externa.
+ * 
+ * Rotação usada para o rebalanceamento da árvore
+ * AVL externa.
+ *
+ * @param tree raiz desbalanceada.
+ * @return Nova raiz após rotação.
+ */
 static OuterNode* _left_rotate_o(OuterNode* tree){
     OuterNode* right = tree->right;
     tree->right = right->left;
@@ -118,6 +205,15 @@ static OuterNode* _left_rotate_o(OuterNode* tree){
     return right;
 }
 
+/**
+ * @brief Rotação à direita na árvore externa.
+ * 
+ * Rotação usada para o rebalanceamento da árvore
+ * AVL externa.
+ *
+ * @param tree raiz desbalanceada.
+ * @return Nova raiz após rotação.
+ */
 static OuterNode* _right_rotate_o(OuterNode* tree){
     OuterNode* left = tree->left;
     tree->left = left->right;
@@ -129,6 +225,13 @@ static OuterNode* _right_rotate_o(OuterNode* tree){
     return left;
 }
 
+/**
+ * @brief Busca nó na árvore interna pelo índice.
+ *
+ * @param tree raiz da árvore interna.
+ * @param search_key fileira procurada.
+ * @return Ponteiro para o nó ou NULL se não existir.
+ */
 static InnerNode* _find_node_i(InnerNode* tree, int search_key){
     if(!tree){
         return NULL;
@@ -144,6 +247,13 @@ static InnerNode* _find_node_i(InnerNode* tree, int search_key){
     }
 }
 
+/**
+ * @brief Busca nó na árvore externa pelo índice.
+ *
+ * @param tree raiz da árvore externa.
+ * @param search_key fileira procurada.
+ * @return Ponteiro para o nó ou NULL se não existir.
+ */
 static OuterNode* _find_node_o(OuterNode* tree, int search_key){
     if(!tree){
         return NULL;
@@ -159,6 +269,15 @@ static OuterNode* _find_node_o(OuterNode* tree, int search_key){
     }
 }
 
+/**
+ * @brief Insere ou atualiza um valor na árvore interna mantendo balanceamento AVL.
+ *
+ * @param tree raiz da árvore interna.
+ * @param insert_key índice do elemento a inserir.
+ * @param value valor a armazenar.
+ * @param already_existed flag de saída: 1 se chave já existia.
+ * @return Nova raiz da subárvore após inserção/balanceamento.
+ */
 static InnerNode* _insert_i(InnerNode* tree, int insert_key, float value, int* already_existed){
     if(!tree){
         InnerNode* new_node = malloc(sizeof (InnerNode));
@@ -214,6 +333,14 @@ static InnerNode* _insert_i(InnerNode* tree, int insert_key, float value, int* a
 
 }
 
+/**
+ * @brief Insere ou atualiza um valor na árvore externa mantendo balanceamento AVL.
+ *
+ * @param tree raiz da árvore externa.
+ * @param insert_key fileira a inserir.
+ * @param inner_tree ponteiro para a árvore interna à ser inserida no nó.
+ * @return Nova raiz da subárvore após inserção/balanceamento.
+ */
 static OuterNode* _insert_o(OuterNode* tree, int insert_key, InnerNode* inner_tree){
     if(!tree){
         OuterNode* new_node = malloc(sizeof (OuterNode));
@@ -267,6 +394,12 @@ static OuterNode* _insert_o(OuterNode* tree, int insert_key, InnerNode* inner_tr
     return tree;
 
 }
+/**
+ * @brief Encontra o maior nó (mais à direita) em uma árvore interna.
+ *
+ * @param tree raiz da árvore interna.
+ * @return Ponteiro para o nó máximo ou NULL se a árvore estiver vazia.
+ */
 static InnerNode * _find_max_i (InnerNode * tree){
     if(tree == NULL){
         return NULL;
@@ -277,6 +410,12 @@ static InnerNode * _find_max_i (InnerNode * tree){
     return _find_max_i(tree -> right);
 }
 
+/**
+ * @brief Encontra o maior nó (mais à direita) em uma árvore externa.
+ *
+ * @param tree raiz da árvore externa.
+ * @return Ponteiro para o nó máximo ou NULL se a árvore estiver vazia.
+ */
 static OuterNode * _find_max_o (OuterNode * tree){
     if(tree == NULL){
         return NULL;
@@ -287,6 +426,13 @@ static OuterNode * _find_max_o (OuterNode * tree){
     return _find_max_o(tree -> right);
 }
 
+/**
+ * @brief Remove chave da árvore interna e rebalanceia.
+ *
+ * @param tree raiz da árvore interna.
+ * @param remove_key coluna a remover.
+ * @return Nova raiz da subárvore após remoção.
+ */
 static InnerNode * _remove_i(InnerNode* tree, int remove_key){
     if(tree == NULL){
         return NULL;
@@ -349,6 +495,17 @@ static InnerNode * _remove_i(InnerNode* tree, int remove_key){
 
 }
 
+/**
+ * @brief Remove fileira e rebalanceia a árvore externa.
+ * 
+ * Só deve ser chamado para a remoção "estrutural" do nó,
+ * não limpa o conteúdo interno dele. Planejado para a
+ * remoção de um nó já vazio.
+ *
+ * @param tree raiz da árvore externa.
+ * @param remove_key fileira a remover.
+ * @return Nova raiz da subárvore após remoção.
+ */
 static OuterNode * _remove_o(OuterNode* tree, int remove_key){
     if(tree == NULL){
         return NULL;
@@ -411,6 +568,11 @@ static OuterNode * _remove_o(OuterNode* tree, int remove_key){
     return tree;
 }
 
+/**
+ * @brief Libera recursivamente uma árvore interna.
+ *
+ * @param tree raiz da árvore interna a ser desalocada (ou NULL).
+ */
 static void _free_i_tree(InnerNode* tree){
     if(tree == NULL){
         return;
@@ -421,6 +583,11 @@ static void _free_i_tree(InnerNode* tree){
     return;
 }
 
+/**
+ * @brief Libera recursivamente árvore externa e todas as internas associadas.
+ *
+ * @param tree raiz da árvore externa a ser desalocada (ou NULL).
+ */
 static void _free_o_tree(OuterNode* tree){
     if(tree == NULL){
         return;
@@ -432,6 +599,12 @@ static void _free_o_tree(OuterNode* tree){
     return;
 }
 
+/**
+ * @brief Clona profundamente uma árvore interna.
+ *
+ * @param tree raiz a copiar.
+ * @return Ponteiro para a nova raiz clonada.
+ */
 static InnerNode* _clone_i_tree(InnerNode* tree){
     if(!tree){
         return NULL;
@@ -448,6 +621,12 @@ static InnerNode* _clone_i_tree(InnerNode* tree){
     return new_node;
 }
 
+/**
+ * @brief Clona profundamente a árvore externa e cada árvore interna.
+ *
+ * @param tree raiz a copiar.
+ * @return Ponteiro para a nova raiz clonada.
+ */
 static OuterNode* _clone_o_tree(OuterNode* tree){
     if(!tree){
         return NULL;
@@ -464,6 +643,12 @@ static OuterNode* _clone_o_tree(OuterNode* tree){
     return new_node;
 }
 
+/**
+ * @brief Copia conteúdo de uma matriz para outra, recriando ambas as árvores.
+ *
+ * @param source origem (já validada).
+ * @param dest destino, que terá árvores antigas liberadas.
+ */
 static AVLStatus _copy_matrix(AVLMatrix* source, AVLMatrix* dest){
     if(!source || !dest){
         return AVL_ERROR_NULL_MATRIX;
@@ -485,6 +670,12 @@ static AVLStatus _copy_matrix(AVLMatrix* source, AVLMatrix* dest){
     return AVL_STATUS_OK;
 }
 
+/**
+ * @brief Multiplica todos os nós de uma árvore interna por um escalar.
+ *
+ * @param tree raiz da árvore interna.
+ * @param a fator escalar.
+ */
 static void _scalar_multiply_i_tree(InnerNode* tree, float a){
     if(!tree){
         return;
@@ -494,6 +685,12 @@ static void _scalar_multiply_i_tree(InnerNode* tree, float a){
     _scalar_multiply_i_tree(tree->right, a);
 }
 
+/**
+ * @brief Multiplica todos os valores armazenados na árvore externa (todas as fileiras) por um escalar.
+ *
+ * @param tree raiz da árvore externa.
+ * @param a fator escalar.
+ */
 static void _scalar_multiply_o_tree(OuterNode* tree, float a){
     if(!tree){
         return;
@@ -503,6 +700,16 @@ static void _scalar_multiply_o_tree(OuterNode* tree, float a){
     _scalar_multiply_o_tree(tree->right, a);
 }
 
+/**
+ * @brief Copia pares (i,j,valor) de uma árvore interna para vetores auxiliares.
+ *
+ * @param inner_tree árvore interna.
+ * @param I vetor de linhas.
+ * @param J vetor de colunas.
+ * @param Data vetor de valores.
+ * @param position ponteiro com posição inicial dos vetores.
+ * @param i índice de linha fixado.
+ */
 static void _copy_i(InnerNode* inner_tree, int* I, int* J, float* Data, int* position, int i){
     if(!inner_tree){
         return;
@@ -517,6 +724,17 @@ static void _copy_i(InnerNode* inner_tree, int* I, int* J, float* Data, int* pos
     return;
 }
 
+/**
+ * @brief Copia toda a matriz percorrendo a árvore externa e delegando para _copy_i.
+ *
+ * Resulta em vetores paralelos I,J,Data de tamanho k com todas as entradas não nulas.
+ *
+ * @param outer_tree raiz da árvore externa.
+ * @param I vetor de linhas.
+ * @param J vetor de colunas.
+ * @param Data vetor de valores.
+ * @param position ponteiro com posição inicial dos vetores.
+ */
 static void _copy_o(OuterNode* outer_tree, int* I, int* J, float* Data, int* position){
     if(!outer_tree){
         return;
@@ -528,6 +746,21 @@ static void _copy_o(OuterNode* outer_tree, int* I, int* J, float* Data, int* pos
     return;
 }
 
+/**
+ * @brief Acumula parcial de multiplicação de matrizes: atualiza linha de C com valores de A * B.
+ *
+ * Percorre a árvore interna correspondente à linha j de B (elementos B[j, c])
+ * e, para cada coluna c ali presente, soma no resultado C a contribuição
+ * A[i, j] * B[j, c]. O efeito é acumular na linha i de C todas as parcelas
+ * referentes a um valor específico A[i, j], de modo que, com chamadas que
+ * englobam todas as posições necessárias, a multiplicação de matriz ocorre
+ * corretamente.
+ *
+ * @param inner_tree árvore interna da linha j de B (colunas não nulas).
+ * @param row linha alvo em C.
+ * @param A_value valor A[i, j] correspondente.
+ * @param C matriz resultado.
+ */
 static AVLStatus _matmul_i_accumulate(InnerNode* inner_tree, int row, float A_value, AVLMatrix* C){
     if(!inner_tree){
         return AVL_STATUS_OK;

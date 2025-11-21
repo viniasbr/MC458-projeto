@@ -30,7 +30,7 @@ HashMatrix createHashMatrix(int rows, int columns){
     return matrix;
 }
 
-//redimensiona a tabela/vetor de espalhamenteo de acrodo com o load factor
+//redimensiona a tabela/vetor de espalhamento de acordo com o load factor
 void resize(HashMatrix matrix){
     int new_capacity = matrix->capacity;
     
@@ -64,7 +64,7 @@ void resize(HashMatrix matrix){
     matrix->capacity = new_capacity;
 }
 
-//pega um elemento da matriz de acrodo com o hash da linha e coluna
+//pega um elemento da matriz de acordo com o hash da linha e coluna
 float getElement(HashMatrix matrix, int row, int column){
     if (matrix == NULL){
         fprintf(stderr, "MATRIZ NULL");
@@ -160,7 +160,7 @@ void setElement(HashMatrix matrix, int row, int column, float data){
 }
 
 //multiplica duas matrizes hash
-HashMatrix* matrixMultiplication(HashMatrix A, HashMatrix B){
+HashMatrix matrixMultiplication(HashMatrix A, HashMatrix B){
     if (A == NULL || B == NULL){
         fprintf(stderr, "MATRIZ NULL");
         exit(1);
@@ -196,7 +196,7 @@ HashMatrix* matrixMultiplication(HashMatrix A, HashMatrix B){
 }
 
 //soma de matrizes
-HashMatrix* matrixAddition(HashMatrix A, HashMatrix B){
+HashMatrix matrixAddition(HashMatrix A, HashMatrix B){
     if (A == NULL || B == NULL){
         fprintf(stderr, "MATRIZ NULL");
         exit(1);
@@ -236,7 +236,7 @@ HashMatrix* matrixAddition(HashMatrix A, HashMatrix B){
 }
 
 //multiplicação de matriz por escalar
-HashMatrix* matrixScalarMultiplication(HashMatrix A, float scalar){
+HashMatrix matrixScalarMultiplication(HashMatrix A, float scalar){
     if (A == NULL){
         fprintf(stderr, "MATRIZ NULL");
         exit(1);
