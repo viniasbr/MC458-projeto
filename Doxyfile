@@ -26,3 +26,4 @@ HAVE_DOT               = YES
 WARN_IF_UNDOCUMENTED   = YES
 WARNINGS               = YES
 QUIET                  = NO
+OPTIMIZE_OUTPUT_FOR_C  = YES
