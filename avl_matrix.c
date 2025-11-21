@@ -790,7 +790,7 @@ AVLStatus get_element_avl(AVLMatrix* matrix, int i, int j, float* out_value){
         return status;
     }
     *out_value = 0.0f;
-    status = _validate_indices(matrix, i, j);
+    status = _validate_indexes(matrix, i, j);
     if(status != AVL_STATUS_OK){
         return status;
     }
@@ -807,7 +807,7 @@ AVLStatus get_element_avl(AVLMatrix* matrix, int i, int j, float* out_value){
 }
 
 AVLStatus insert_element_avl(AVLMatrix* matrix, float value, int i, int j){
-    AVLStatus status = _validate_indices(matrix, i, j);
+    AVLStatus status = _validate_indexes(matrix, i, j);
     if(status != AVL_STATUS_OK){
         return status;
     }
@@ -837,7 +837,7 @@ AVLStatus insert_element_avl(AVLMatrix* matrix, float value, int i, int j){
 }
 
 AVLStatus delete_element_avl(AVLMatrix* matrix, int i, int j){
-    AVLStatus status = _validate_indices(matrix, i, j);
+    AVLStatus status = _validate_indexes(matrix, i, j);
     if(status != AVL_STATUS_OK){
         return status;
     }
