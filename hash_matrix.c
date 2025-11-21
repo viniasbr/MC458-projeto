@@ -107,7 +107,7 @@ bool verify_result_matrix(HashMatrix* result, int expected_rows, int expected_co
 
 HashMatrix* create_hash_matrix(int rows, int columns){
     if (rows < 0 || columns < 0){
-        return HASH_ERROR_INVALID_ARGUMENT;
+        return NULL;
     }
 
     HashMatrix* matrix = malloc(sizeof(struct HashMatrix));
