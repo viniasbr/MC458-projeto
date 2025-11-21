@@ -50,7 +50,7 @@ HashStatus resize(HashMatrix* matrix){
     }
 
     if (new_capacity == matrix->capacity){
-        return HashStatus_OK;
+        return HASH_STATUS_OK;
     }
 
     Node **new_buckets = calloc(new_capacity, sizeof(Node*));
@@ -74,7 +74,33 @@ HashStatus resize(HashMatrix* matrix){
     matrix->buckets = new_buckets;
     matrix->capacity = new_capacity;
 
-    return HashStatus_OK;
+    return HASH_STATUS_OK;
+}
+
+/**
+ * @brief Verifica se a matriz resultado está corretamente inicializada.
+ * 
+ * A matriz deve ser vazia.
+ *
+ * @param result ponteiro para a matriz resultado.
+ * @return true se a matriz estiver correta, false caso contrário.
+ */
+bool verify_result_matrix(HashMatrix* result, int expected_rows, int expected_columns){
+    if (result == NULL){
+        return false;
+    }
+
+    int rows = result->is_transposed ? result->columns : result->rows;
+    int columns = result->is_transposed ? result->rows : result->columns;
+    if (rows != expected_rows || columns != expected_columns){
+        return false;
+    }
+
+    if (result->count != 0){
+        return false;
+    }
+
+    return true;
 }
 
 HashMatrix* create_hash_matrix(int rows, int columns){
@@ -190,33 +216,27 @@ HashStatus set_element_hash(HashMatrix* matrix, int row, int column, float data)
         matrix->buckets[index] = new_Node;
         matrix->count++;
     }
+
+    return HASH_STATUS_OK;
 }
 
-HashMatrix* matrix_multiplication_hash(HashMatrix* A, HashMatrix* B){
+HashStatus matrix_multiplication_hash(HashMatrix* A, HashMatrix* B, HashMatrix* C){
     if (A == NULL || B == NULL){
         return HASH_ERROR_NULL_MATRIX;
     }
 
-    if (A->is_transposed && B->is_transposed){
-        if (A->columns != B->rows){
-            return HASH_ERROR_DIMENSION_MISMATCH;
-        }
-    } else if (A->is_transposed && !B->is_transposed){
-        if (A->columns != B->columns){
-            return HASH_ERROR_DIMENSION_MISMATCH;
-        }
-    } else if (!A->is_transposed && B->is_transposed){
-        if (A->rows != B->rows){
-            return HASH_ERROR_DIMENSION_MISMATCH;
-        }
-    } else {
-        if (A->rows != B->columns){
-            return HASH_ERROR_DIMENSION_MISMATCH;
-        }
+    int columns_a = A->is_transposed ? A->rows : A->columns;
+    int columns_b = B->is_transposed ? B->rows : B->columns;
+    int rows_a = A->is_transposed ? A->columns : A->rows;
+    int rows_b = B->is_transposed ? B->columns : B->rows;
+    if (columns_a != rows_b){
+        return HASH_ERROR_DIMENSION_MISMATCH;
     }
 
-    HashMatrix* C = create_hash_matrix(A->rows, B->columns);
-    
+    if (!verify_result_matrix(C, rows_a, columns_b)){
+        return HASH_ERROR_INVALID_ARGUMENT;
+    }    
+
     Node* current_bucket_A = NULL;
     Node* current_bucket_B = NULL;
 
@@ -247,17 +267,19 @@ HashMatrix* matrix_multiplication_hash(HashMatrix* A, HashMatrix* B){
         }
     }
 
-    return C;
+    return HASH_STATUS_OK;
 }
 
-HashMatrix* matrix_addition_hash(HashMatrix* A, HashMatrix* B){
+HashStatus matrix_addition_hash(HashMatrix* A, HashMatrix* B, HashMatrix* C){
     if (A == NULL || B == NULL){
         fprintf(stderr, "MATRIZ NULL");
         exit(1);
     }
 
-    HashMatrix* C = create_hash_matrix(A->rows, A->columns);
-
+    if (!verify_result_matrix(C, A->is_transposed ? A->columns : A->rows, A->is_transposed ? A->rows : A->columns)){
+        return HASH_ERROR_INVALID_ARGUMENT;
+    }
+    
     Node* current_bucket = NULL;
 
     for (int i = 0; i < A->capacity; i++){
@@ -292,15 +314,17 @@ HashMatrix* matrix_addition_hash(HashMatrix* A, HashMatrix* B){
         }
     }
 
-    return C;
+    return HASH_STATUS_OK;
 }
 
-HashMatrix* matrix_scalar_multiplication_hash(HashMatrix* A, float scalar){
+HashStatus matrix_scalar_multiplication_hash(HashMatrix* A, HashMatrix* B, float scalar){
     if (A == NULL){
         return HASH_ERROR_NULL_MATRIX;
     }
 
-    HashMatrix* B = create_hash_matrix(A->rows, A->columns);
+    if (!verify_result_matrix(B, A->is_transposed ? A->columns : A->rows, A->is_transposed ? A->rows : A->columns)){
+        return HASH_ERROR_INVALID_ARGUMENT;
+    }
 
     Node* current_bucket = NULL;
 
@@ -319,7 +343,7 @@ HashMatrix* matrix_scalar_multiplication_hash(HashMatrix* A, float scalar){
         }
     }
 
-    return B;
+    return HASH_STATUS_OK;
 }
 
 HashStatus transpose_hash(HashMatrix* matrix){
@@ -327,7 +351,7 @@ HashStatus transpose_hash(HashMatrix* matrix){
     return HASH_ERROR_NULL_MATRIX;
     }
     matrix->is_transposed = !matrix->is_transposed;
-    return HashStatus_OK;
+    return HASH_STATUS_OK;
 }
 
 HashStatus free_hash_matrix(HashMatrix* matrix){
@@ -344,5 +368,5 @@ HashStatus free_hash_matrix(HashMatrix* matrix){
     }
     free(matrix->buckets);
     free(matrix);
-    return HashStatus_OK;
+    return HASH_STATUS_OK;
 }

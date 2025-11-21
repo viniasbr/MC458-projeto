@@ -80,7 +80,7 @@ HashStatus set_element_hash(HashMatrix* matrix, int row, int column, float data)
  * @param B ponteiro para a matriz hash B.
  * @return Ponteiro para a matriz resultante C.
  */
-HashMatrix* matrix_multiplication_hash(HashMatrix* A, HashMatrix* B);
+HashStatus matrix_multiplication_hash(HashMatrix* A, HashMatrix* B, HashMatrix* C);
 
 /**
  * @brief Soma duas matrizes hash.
@@ -89,7 +89,7 @@ HashMatrix* matrix_multiplication_hash(HashMatrix* A, HashMatrix* B);
  * @param B ponteiro para a matriz hash B.
  * @return Ponteiro para a matriz resultante C.
  */
-HashMatrix* matrix_addition_hash(HashMatrix* A, HashMatrix* B);
+HashStatus matrix_addition_hash(HashMatrix* A, HashMatrix* B, HashMatrix* C);
 
 /**
  * @brief Multiplica uma matriz hash por um escalar.
@@ -98,10 +98,10 @@ HashMatrix* matrix_addition_hash(HashMatrix* A, HashMatrix* B);
  * @param scalar valor escalar.
  * @return Ponteiro para a nova matriz resultante B.
  */
-HashMatrix* matrix_scalar_multiplication_hash(HashMatrix* A, float scalar);
+HashStatus matrix_scalar_multiplication_hash(HashMatrix* A, HashMatrix* B, float scalar);
 
 /**
- * @brief Transpõe a matriz hash.
+ * @brief Transpõe a matriz hash.   
  * 
  * @param matrix ponteiro para a matriz hash.
  * @return Código ::HashStatus indicando sucesso ou motivo da falha.
