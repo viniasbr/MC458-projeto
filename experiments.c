@@ -46,6 +46,35 @@ float** create_dense_matrix(int n, int m){
     return matrix;
 }
 
+void fill_dense_matrix(float** matrix, int k, int* I, int* J, float* Data){
+    for(int count = 0; count < k; count++){
+        matrix[I[count]][J[count]] = Data[count];
+    }
+    return;
+}
+
+AVLStatus fill_avl_matrix(AVLMatrix* matrix, int k, int* I, int* J, float* Data){
+    for(int count = 0; count < k; count++){
+        AVLStatus status;
+        status = insert_element_avl(matrix, Data[count], I[count], J[count]);
+        if(status != AVL_STATUS_OK){
+            return status;
+        }
+    }
+    return AVL_STATUS_OK;
+}
+
+HashStatus fill_hash_matrix(HashMatrix* matrix, int k, int* I, int* J, float* Data){
+    for(int count = 0; count < k; count++){
+        HashStatus status;
+        status = set_element_hash(matrix, I[count], J[count], Data[count]);
+        if(status != HASH_STATUS_OK){
+            return status;
+        }
+    }
+    return HASH_STATUS_OK;
+}
+
 void fill_matrices(float** regular_matrix, AVLMatrix* avl_matrix, HashMatrix* hash_matrix, int k, int* I, int* J, float* Data){
     for(int count = 0; count < k; count++){
         AVLStatus status;

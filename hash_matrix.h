@@ -34,8 +34,8 @@ typedef struct HashMatrix{
  * @brief Códigos de retorno das operações na matriz hash.
  */
 typedef enum {
-    HashStatus_OK = 0,                 /**< Operação concluída com sucesso. */
-    HashStatus_NOT_FOUND = 1,          /**< Elemento solicitado não existe. */
+    HASH_STATUS_OK = 0,                 /**< Operação concluída com sucesso. */
+    HASH_STATUS_NOT_FOUND = 1,          /**< Elemento solicitado não existe. */
     HASH_ERROR_NULL_MATRIX = -1,        /**< Ponteiro de matriz nulo. */
     HASH_ERROR_OUT_OF_BOUNDS = -2,      /**< Índices fora dos limites da matriz. */
     HASH_ERROR_DIMENSION_MISMATCH = -3, /**< Incompatibilidade de dimensões entre matrizes. */
