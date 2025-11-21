@@ -1,12 +1,14 @@
-PROJECT_NAME           = "AVL Matrix"
-PROJECT_BRIEF          = "Implementação de matriz esparsa com arvores AVL"
+PROJECT_NAME           = "Sparse Matrix"
+PROJECT_BRIEF          = "Implementação de matriz esparsa com árvores AVL e hash tables"
 OUTPUT_DIRECTORY       = docs/doxygen
 
 OUTPUT_LANGUAGE        = Portuguese
 INPUT_ENCODING         = UTF-8
 
-INPUT                  = AVL_Matrix.h \
-                         AVL_Matrix.c
+INPUT                  = avl_matrix.h \
+                         avl_matrix.c \
+                         hash_matrix.h \
+                         hash_matrix.c \
 FILE_PATTERNS          = *.h \
                          *.c
 RECURSIVE              = NO

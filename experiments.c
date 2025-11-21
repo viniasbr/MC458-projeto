@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "hash_matrix.h"
-#include "AVL_Matrix.h"
+#include "avl_matrix.h"
 
 static void _allocation_fail(){
     fprintf(stderr, "Error: memory allocation failed.\n");

@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file AVL_Matrix.h
+ * @file avl_matrix.h
  * @brief Estruturas e operações para matrizes esparsas baseadas em árvores AVL.
  */
 

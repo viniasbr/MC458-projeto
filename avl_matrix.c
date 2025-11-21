@@ -1,13 +1,13 @@
-#include "AVL_Matrix.h"
+#include "avl_matrix.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 /**
- * @file AVL_Matrix.c
+ * @file avl_matrix.c
  * @brief Implementação de matriz esparsa com duas árvores AVL (linhas e colunas).
  *
  * O arquivo contém funções internas de balanceamento e validação, além das
- * operações públicas declaradas em AVL_Matrix.h.
+ * operações públicas declaradas em avl_matrix.h.
  */
 
 /**
