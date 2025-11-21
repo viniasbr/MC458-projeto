@@ -20,26 +20,6 @@ unsigned int hash(int row, int column, int capacity){
     return (unsigned int) h;
 }
 
-hash_matrix* create_hash_matrix(int rows, int columns){
-    if (rows < 0 || columns < 0){
-        return HASH_ERROR_INVALID_ARGUMENT;
-    }
-
-    hash_matrix* matrix = malloc(sizeof(struct hash_matrix));
-    assert(matrix != NULL);
-
-    matrix->rows = rows;
-    matrix->columns = columns;
-    matrix->capacity = INITIAL_CAPACITY;
-    matrix->count = 0;
-    matrix->is_transposed = false;
-
-    matrix->buckets = calloc(INITIAL_CAPACITY, sizeof(node));
-    assert(matrix->buckets != NULL);
-
-    return matrix;
-}
-
 /**
  * @brief Redimensiona a tabela de espalhamento da matriz hash.
  *
@@ -83,6 +63,26 @@ hash_status resize(hash_matrix* matrix){
     matrix->capacity = new_capacity;
 
     return HASH_STATUS_OK;
+}
+
+hash_matrix* create_hash_matrix(int rows, int columns){
+    if (rows < 0 || columns < 0){
+        return HASH_ERROR_INVALID_ARGUMENT;
+    }
+
+    hash_matrix* matrix = malloc(sizeof(struct hash_matrix));
+    assert(matrix != NULL);
+
+    matrix->rows = rows;
+    matrix->columns = columns;
+    matrix->capacity = INITIAL_CAPACITY;
+    matrix->count = 0;
+    matrix->is_transposed = false;
+
+    matrix->buckets = calloc(INITIAL_CAPACITY, sizeof(node));
+    assert(matrix->buckets != NULL);
+
+    return matrix;
 }
 
 float get_element(hash_matrix* matrix, int row, int column){
