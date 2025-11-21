@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #include "hash_matrix.h"
 #include "avl_matrix.h"
 
@@ -75,19 +76,6 @@ HashStatus fill_hash_matrix(HashMatrix* matrix, int k, int* I, int* J, float* Da
     return HASH_STATUS_OK;
 }
 
-void fill_matrices(float** regular_matrix, AVLMatrix* avl_matrix, HashMatrix* hash_matrix, int k, int* I, int* J, float* Data){
-    for(int count = 0; count < k; count++){
-        AVLStatus status;
-        regular_matrix[I[count]][J[count]] = Data[count];
-        status = insert_element_avl(avl_matrix, Data[count], I[count], J[count]);
-        if(status != AVL_STATUS_OK){
-            //PRINTA STATUS, TODO
-            return;
-        }
-        setElement(hash_matrix, I[count], J[count], Data[count]);
-    }
-}
-
 static unsigned int _count_i_nodes_size(InnerNode* inner_tree){
     if(!inner_tree){
         return 0;
@@ -139,4 +127,83 @@ static unsigned int _hash_matrix_size(HashMatrix* matrix){
 
 static double _delta_t_ns(struct timespec a, struct timespec b){
     return (b.tv_sec - a.tv_sec) * 1e9 + (b.tv_nsec - a.tv_nsec);
+}
+
+int main(){
+    const int EXPERIMENT_MATRIX_LENGTH[] = {100, 100, 100, 100, 1000, 1000, 1000, 1000, 10000, 10000, 10000, 100000, 100000, 100000, 1000000, 1000000, 1000000};
+    const float EXPERIMENT_SPARSITY[] = {0.01f, 0.05f, 0.1f, 0.2f, 0.01f, 0.05f, 0.1f, 0.2f, 1e-6f, 1e-7f, 1e-8f, 1e-7f, 1e-8f, 1e-9f, 1e-8f, 1e-9f, 1e-10f};
+    const int NUM_EXPERIMENTS = 17;
+
+    FILE *sizeExperimentsFile;
+
+    sizeExperimentsFile = fopen("size_experiments.csv", "a");
+
+    if(!sizeExperimentsFile){
+        fprintf(stderr, "Error: couldn't open or create size_experiments.csv.\n");
+        return 1;
+    }
+
+    for(int experiment = 0; experiment < NUM_EXPERIMENTS; experiment++){ //Experimentos de tamanho na memória
+        int matrix_length = EXPERIMENT_MATRIX_LENGTH[experiment];
+        float sparsity = EXPERIMENT_SPARSITY[experiment];
+        int k = (int) floor(matrix_length * matrix_length * sparsity);
+        int* I = (int*) malloc(sizeof(int) * k);
+        int* J = (int*) malloc(sizeof(int) * k);
+        float* Data = (float*) malloc(sizeof(float) * k);
+        if(!I || !J || !Data){
+            if(I){
+                free(I);
+            }
+            if(J){
+                free(J);
+            }
+            if(Data){
+                free(Data);
+            }
+            _allocation_fail();
+        }
+        generate_data(matrix_length, matrix_length, k, I, J, Data);
+        unsigned int dense_matrix_size = _dense_matrix_size(matrix_length, matrix_length);
+        AVLMatrix* avlmatrix;
+        avlmatrix = create_matrix_avl(matrix_length, matrix_length);
+        AVLStatus avlstatus = fill_avl_matrix(avlmatrix, k, I, J, Data);
+        if(avlstatus != AVL_STATUS_OK){
+            fprintf(stderr, "Error filling AVL matrix (status %d: %s).\n",
+                    avlstatus, avl_status_string(avlstatus));
+            free(I);
+            free(J);
+            free(Data);
+            free_matrix_avl(avlmatrix);
+            fclose(sizeExperimentsFile);
+            return 1;
+        }
+        unsigned int avlmatrix_size = _avl_matrix_size(avlmatrix);
+        free_matrix_avl(avlmatrix);
+        HashMatrix* hashmatrix;
+        hashmatrix = create_hash_matrix(matrix_length, matrix_length);
+        HashStatus hashstatus = fill_hash_matrix(hashmatrix, k, I, J, Data);
+        if(hashstatus != HASH_STATUS_OK){
+            fprintf(stderr, "Error filling hash matrix (status %d).\n", hashstatus);
+            free(I);
+            free(J);
+            free(Data);
+            free_hash_matrix(hashmatrix);
+            fclose(sizeExperimentsFile);
+            return 1;
+        }
+        unsigned int hashmatrix_size = _hash_matrix_size(hashmatrix);
+        free_hash_matrix(hashmatrix);
+
+        fprintf(sizeExperimentsFile, "%d, %.12f, %d, %u, %u, %u\n",
+                matrix_length, sparsity, k,
+                dense_matrix_size, avlmatrix_size, hashmatrix_size);
+
+        free(I);
+        free(J);
+        free(Data);
+    }
+    fclose(sizeExperimentsFile);
+
+
+    return 0;
 }
