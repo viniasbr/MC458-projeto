@@ -1,0 +1,23 @@
+\begin{tabular}{rrrrrr}
+\toprule
+n & sparsity & k & Dense & AVL & Hash \\
+\midrule
+100 & 0.01 & 100 & $310.00\,\mu\mathrm{s}$ & $14.30\,\mu\mathrm{s}$ & $21.30\,\mu\mathrm{s}$ \\
+100 & 0.05 & 501 & $309.90\,\mu\mathrm{s}$ & $267.30\,\mu\mathrm{s}$ & $418.40\,\mu\mathrm{s}$ \\
+100 & 0.1 & 1001 & $327.80\,\mu\mathrm{s}$ & $1.15\,\mathrm{ms}$ & $1.67\,\mathrm{ms}$ \\
+100 & 0.2 & 2001 & $318.20\,\mu\mathrm{s}$ & $4.14\,\mathrm{ms}$ & $6.20\,\mathrm{ms}$ \\
+1000 & 0.01 & 10000 & $438.25\,\mathrm{ms}$ & $16.82\,\mathrm{ms}$ & $250.56\,\mathrm{ms}$ \\
+1000 & 0.05 & 50001 & $439.00\,\mathrm{ms}$ & $617.18\,\mathrm{ms}$ & $20.23\,\mathrm{s}$ \\
+1000 & 0.1 & 100001 & $468.95\,\mathrm{ms}$ & $1.84\,\mathrm{s}$ & $83.25\,\mathrm{s}$ \\
+1000 & 0.2 & 200001 & $437.42\,\mathrm{ms}$ & $7.44\,\mathrm{s}$ & $329.74\,\mathrm{s}$ \\
+10000 & 1e-08 & 1 & \textemdash & $200\,\mathrm{ns}$ & $100\,\mathrm{ns}$ \\
+10000 & 1e-07 & 11 & \textemdash & $300\,\mathrm{ns}$ & $400\,\mathrm{ns}$ \\
+10000 & 1e-06 & 100 & \textemdash & $1.70\,\mu\mathrm{s}$ & $15.60\,\mu\mathrm{s}$ \\
+100000 & 1e-09 & 10 & \textemdash & $300\,\mathrm{ns}$ & $600\,\mathrm{ns}$ \\
+100000 & 1e-08 & 100 & \textemdash & $1.70\,\mu\mathrm{s}$ & $13.10\,\mu\mathrm{s}$ \\
+100000 & 1e-07 & 1001 & \textemdash & $30.90\,\mu\mathrm{s}$ & $933.60\,\mu\mathrm{s}$ \\
+1000000 & 1e-10 & 101 & \textemdash & $2.00\,\mu\mathrm{s}$ & $12.50\,\mu\mathrm{s}$ \\
+1000000 & 1e-09 & 1000 & \textemdash & $21.60\,\mu\mathrm{s}$ & $998.00\,\mu\mathrm{s}$ \\
+1000000 & 1e-08 & 10000 & \textemdash & $366.80\,\mu\mathrm{s}$ & $278.44\,\mathrm{ms}$ \\
+\bottomrule
+\end{tabular}

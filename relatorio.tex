@@ -7,6 +7,7 @@
 \usepackage{mathtools}
 \usepackage[brazilian]{babel}
 \usepackage{enumitem}
+\usepackage{booktabs}
 
 \newtheorem{thm}{Teorema}
 \newtheorem{lemma}[thm]{Lema}
@@ -23,6 +24,7 @@
         \texttt{RA: 247391}
 }
 \date{}
+\usepackage{caption}
 \begin{document}
     \maketitle
 
@@ -207,7 +209,55 @@
 
     O algoritmo faz duas chamadas para algoritmos lineares na quantidade de nós e faz esforço constante, garantindo $T(k) \in O(k)$.
 
+    \section{Análise Experimental}
 
+    \subsection{Dados}
+    \subsubsection{Resultados de Tamanho}
+    \begin{center}
+    \input{tables_sizes.tex}
+    \end{center}
 
+    \subsection{Resultados de Tempo}
+    \begin{table}[h]
+        \centering
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \resizebox{\linewidth}{!}{\input{tables_time_get.tex}}
+            \captionof{table}{Temporização de \texttt{get}}
+        \end{minipage}\hfill
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \resizebox{\linewidth}{!}{\input{tables_time_set.tex}}
+            \captionof{table}{Temporização de \texttt{set}}
+        \end{minipage}
+    \end{table}
+
+    \begin{table}[h]
+        \centering
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \resizebox{\linewidth}{!}{\input{tables_time_trans.tex}}
+            \captionof{table}{Temporização de \texttt{transpose}}
+        \end{minipage}\hfill
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \resizebox{\linewidth}{!}{\input{tables_time_scalar.tex}}
+            \captionof{table}{Temporização de \texttt{scalar\_mul}}
+        \end{minipage}
+    \end{table}
+
+    \begin{table}[h]
+        \centering
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \resizebox{\linewidth}{!}{\input{tables_time_sum.tex}}
+            \captionof{table}{Temporização de \texttt{sum}}
+        \end{minipage}\hfill
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \resizebox{\linewidth}{!}{\input{tables_time_mul.tex}}
+            \captionof{table}{Temporização de \texttt{matmul}}
+        \end{minipage}
+    \end{table}
     
 \end{document}
