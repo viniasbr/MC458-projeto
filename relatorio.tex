@@ -41,19 +41,19 @@
     \subsubsection{Complexidade de \texttt{hash}}
     A operação de Hash inclui apenas um número constante de operações básicas. Assim, essa função $T(k) \in \Theta(1)$. Porém, analisaremos também a esperança de elementos por bucket, que será usada para a análise da complexidade do caso médio de outras operações. Como nesse hash a tabela de espalhamento é um vetor, eventualmente será chamada de vetor de espalhamento ou simplesmente de vetor. 
 
-    Vamos presumir que cada par linha coluna $p$ que fazemos o hash tem igual probabilidade de cair em cada bucket em um vetor de tamanho $m$. A probabilidade de $p$ cair no i-ésimo bucket é $\frac{1}{m}$. Se temos $n$ elementos nesse vetor, então a esperança do número de elementos em qualquer bucket é $\frac{n}{m}$. Note que $n$ e $m$ tem uma relação limitada pelo load factor $\alpha$ do hash. Como o aumento ou diminuição do load factor só pode ser feito pela função \texttt{setElement}, e essa função ajusta o tamanho do vetor de espalhamento sempre que o número de elementos sai do intervalo aceitável [0.25, 0.75], então 
+    Vamos presumir que cada par linha coluna $p$ que fazemos o hash tem igual probabilidade de cair em cada bucket em um vetor de tamanho $m$. A probabilidade de $p$ cair no i-ésimo bucket é $\frac{1}{m}$. Se temos $n$ elementos nesse vetor, então a esperança do número de elementos em qualquer bucket é $\frac{n}{m}$. Note que $n$ e $m$ tem uma relação limitada pelo load factor $\alpha$ do hash. Como o aumento ou diminuição do load factor só pode ser feito pela função \texttt{set\_element\_hash}, e essa função ajusta o tamanho do vetor de espalhamento sempre que o número de elementos sai do intervalo aceitável [0.25, 0.75], então 
     $$0.25 <\frac{n}{m}<0.75$$
     Portanto, a esperança do número de elementos por bucket  $T  (k) \in O(1)$.
 
     
     \subsubsection{Complexidade de \texttt{createHashMatrix}}
-    Nessa operação, alocamos memória de acordo com o Struct \texttt{hashMatrix}, o que tem custo assumido como constante. Então, atribuímos valores iniciais para os 5 campos da Struct, cada atribuição em tempo constante. Então retornamos a matriz. $T  (k) \in O(1)$. 
+    Nessa operação, alocamos memória de acordo com o Struct \texttt{HashMatrix}, o que tem custo assumido como constante. Então, atribuímos valores iniciais para os 5 campos da Struct, cada atribuição em tempo constante. Então retornamos a matriz. $T  (k) \in O(1)$. 
     \subsubsection{Complexidade de \texttt{resize}}
     Após algumas operações de custo constante, percorremos o vetor de espalhamento, e para cada elemento do vetor, percorremos o bucket associado a ele. Como sabemos que, em média, teremos um número constante de elementos por bucket, a classe assintótica é igual ao de só percorrer o vetor.  Para cada elemento do vetor, faremos uma quantidade constante de operações. Além disso, sabemos, pelo número constante de elementos por bucket e pelo limite de Load Factor entre constantes, que o número de elementos no vetor de espalhamento é igual ao número de elementos na matriz multiplicado por uma constante. Portanto, o custo esperado de \texttt{resize} é $T(k) \in O(k)$.
-    \subsubsection{Complexidade de \texttt{getElement}}
+    \subsubsection{Complexidade de \texttt{get\_element\_hash}}
     Nessa função, fazemos um número constante de operações, então executamos a função \texttt{hash}, de custo constante. Então, percorremos o bucket da posição indicada pelo \texttt{hash}. Como já foi discutido, o número esperado de elementos por bucket é constante, portanto, o custo esperado de toda operação é constante, e $T(k) \in O(1)$.
-    \subsubsection{Complexidade de \texttt{setElement}}
-    O custo esperado da operação \texttt{setElement} é parecido ao de \texttt{getElement}. Fazemos um número constante de operações, com exceção da iteração do bucket, que tem número esperado de elementos constante. Portanto, $T(k) \in \Theta(1)$. 
+    \subsubsection{Complexidade de \texttt{set\_element\_hash}}
+    O custo esperado da operação \texttt{set\_element\_hash} é parecido ao de \texttt{get\_element\_hash}. Fazemos um número constante de operações, com exceção da iteração do bucket, que tem número esperado de elementos constante. Portanto, $T(k) \in \Theta(1)$. 
     Essa operação também serve para remover elementos caso seja atualizado um elemento não nulo com 0, tornando-o nulo. Nesse caso, o custo assintótico não muda.
     A diferença é que a função pode chamar \texttt{resize} eventualmente, o que faria com que o custo fosse $O(k)$. Porém, vamos verificar o custo amortizado.
 
@@ -63,14 +63,14 @@
 
     Considere uma sequência de n inserções. Cada \texttt{resize} custa O(i), sendo i o tamanho atual. O número de inserções que podemos fazer entre cada \texttt{resize} é $\Theta(i)$ porque dobramos o tamanho a cada vez. Portanto, se fazemos uma operação O(i) a cada $\Theta(i)$ inserções, então o custo amortizado da inserção é $O(1 + \frac{O(i)}{\Theta(i)})$, portanto o custo amortizado da inserção $\in O(1)$.
     
-    \subsubsection{Complexidade de \texttt{matrixMultiplication}}
+    \subsubsection{Complexidade de \texttt{matrix\_multiplication\_hash}}
     Nessa operação, criamos uma matriz resultado (custo constante). Então percorremos o vetor de espalhamento para a matriz $A$, e então percorremos os buckets do vetor de $A$. Para cada elemento no bucket, percorremos o vetor de espalhamento de $B$, e para cada elemento no vetor de espalhamento de $B$, percorremos o bucket associado. Apesar de ser um laço quadruplamente aninhado, temos limitantes garantidos para o tamanho do vetor com relação a $K$, e temos limitantes esperados do número de elementos por bucket. Além de sabermos que, em todos os buckets de uma matriz $M$, temos exatamente $Km$ elementos. Como já discutido antes, o custo esperado de percorrer o vetor de espalhamento, mesmo se também percorremos os buckets de cada elemento, é linear em $K$. Como percorremos $A$, e $B$ de maneira aninhada, o custo esperado é $T(k) \in O(Ka\cdot Kb)$, sendo $Ka$ o número de elementos na matriz esparsa $A$ e $Kb$ o número de elementos na matriz esparsa $B$.
-    \subsubsection{Complexidade de \texttt{matrixAddition}}
+    \subsubsection{Complexidade de \texttt{matrix\_addition\_hash}}
     Nessa operação, criamos uma matriz resultado (custo constante), então percorremos o vetor de espalhamento para as duas matrizes que serão somadas, $A$ e $B$. Para cada elemento do vetor, percorremos o bucket associado. O custo esperado de percorrer o vetor de espalhamento, mesmo se também percorremos os buckets de cada elemento, é linear em $K$. Como percorremos $A$, e depois $B$, o custo é $T(k) \in O(Ka + Kb)$, sendo $Ka$ o número de elementos na matriz esparsa $A$ e $Kb$ o número de elementos na matriz esparsa $B$.
-    \subsubsection{Complexidade de \texttt{matrixScalarMultiplication}}
+    \subsubsection{Complexidade de \texttt{matrix\_scalar\_multiplication\_hash}}
     Nessa operação, criamos uma matriz resultado (custo constante), então percorremos o vetor de espalhamento, e para cada elemento do vetor, percorremos o bucket associado. Como já discutido antes, o custo esperado de percorrer o vetor de espalhamento, mesmo se também percorremos os buckets de cada elemento, $T(k) \in O(k)$.
     
-    \subsubsection{Complexidade de \texttt{transpose}}
+    \subsubsection{Complexidade de \texttt{transpose\_hash}}
     Essa operação tem somente uma linha, que é uma mudança de um valor booleano para seu oposto. Isso tem custo constante. A forma como a transposição é de fato feita é pela mudança entre linhas e colunas nas outras operações. Portanto $T(k) \in \Theta(1)$.
     
     \subsection{Estrutura 2 - AVL}
@@ -214,12 +214,33 @@
     \subsection{Dados}
     \subsubsection{Resultados de Tamanho}
     \begin{center}
-    \input{tables_sizes.tex}
+    \label{tab:tamanhos}
+    \resizebox{0.9\linewidth}{!}{\input{tables_sizes.tex}}
+    \captionof{table}{Tamanhos (bytes) para Dense, AVL e Hash.}
     \end{center}
 
-    \subsection{Resultados de Tempo}
-    \begin{table}[h]
+    \begin{figure}[h]
         \centering
+        \includegraphics[width=0.45\textwidth]{memory_vs_sparsity_n100.png}
+        \includegraphics[width=0.45\textwidth]{memory_vs_sparsity_n1000.png}
+        \caption{Memória vs. esparsidade (log-log) para $n=100$ e $n=1000$.}
+    \end{figure}
+
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.45\textwidth]{memory_vs_sparsity_n10000.png}
+        \includegraphics[width=0.45\textwidth]{memory_vs_sparsity_n100000.png}
+        \caption{Memória vs. esparsidade (log-log) para $n=10{,}000$ e $n=100{,}000$.}
+    \end{figure}
+
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.45\textwidth]{memory_vs_sparsity_n1000000.png}
+        \caption{Memória vs. esparsidade (log-log) para $n=1{,}000{,}000$.}
+    \end{figure}
+
+    \subsubsection{Resultados de Tempo}
+    \begin{center}
         \begin{minipage}{0.48\textwidth}
             \centering
             \resizebox{\linewidth}{!}{\input{tables_time_get.tex}}
@@ -230,10 +251,9 @@
             \resizebox{\linewidth}{!}{\input{tables_time_set.tex}}
             \captionof{table}{Temporização de \texttt{set}}
         \end{minipage}
-    \end{table}
+    \end{center}
 
-    \begin{table}[h]
-        \centering
+    \begin{center}
         \begin{minipage}{0.48\textwidth}
             \centering
             \resizebox{\linewidth}{!}{\input{tables_time_trans.tex}}
@@ -244,10 +264,9 @@
             \resizebox{\linewidth}{!}{\input{tables_time_scalar.tex}}
             \captionof{table}{Temporização de \texttt{scalar\_mul}}
         \end{minipage}
-    \end{table}
+    \end{center}
 
-    \begin{table}[h]
-        \centering
+    \begin{center}
         \begin{minipage}{0.48\textwidth}
             \centering
             \resizebox{\linewidth}{!}{\input{tables_time_sum.tex}}
@@ -258,6 +277,20 @@
             \resizebox{\linewidth}{!}{\input{tables_time_mul.tex}}
             \captionof{table}{Temporização de \texttt{matmul}}
         \end{minipage}
-    \end{table}
+    \end{center}
+
+    \subsection{Interpretação}
+
+    Através da análise dos dados experimentais e da compreensão da diferença entre um pior caso assintótico garantido e um pior caso assintótico esperado, é possível tirar algumas conclusões:
+
+    Primeiro, pelos dados é possível observar que o uso de matrizes densas, em geral, é mais vantajoso para pequenos tamanhos. Se é possível armazenar a matriz por completo, as operações são ordens de grandeza mais rápidas, e pensando em memória, o \emph{overhead} gerado pelas implementações propostas pode ser maior em tamanhos pequenos. Porém, para grandes matrizes, a situação é a inversa -- os dados experimentais param em $n = 10^3$ pois o tempo para a execução das multiplicações de matrizes densas era impraticável, e para $n = 10^4$ é virtualmente impossível armazenar matrizes densas em hardware de consumidor. Já para as implementações de AVL e Hash, o baixo grau de esparsidade especificado pelo enunciado permite as operações em tempo baixíssimo, com uso de memória totalmente viável. Mesmo em graus de esparsidade ligeiramente mais altos, a dependência assintótica da memória apenas nos dados efetivamente armazenados torna viável o uso dessas estruturas. Dessa forma, pode-se concluir que o uso mais vantajoso desse tipo de representação de matriz esparsa é para armazenar e operar em cima de dados matriciais de grandes ordens -- com a implementação densa, existem aplicações simplesmente impossíveis, que tornam-se viáveis com o uso das estruturas esparsas.
+
+    Entre as duas estruturas propostas, existem motivos para usar uma \emph{versus} a outra. Em todas as operações com exceção da \texttt{matmul}, a estrutura baseada em Hash se mostrou experimentalmente mais rápida, mas suas garantias são fracas -- estatisticamente, ela respeita os limites impostos, mas os limites para o pior caso possível são altíssimos comparados à implementação por AVL. Assim, em aplicações de tempo real com necessidade de garantias fortes, é péssima prática utilizar uma estrutura que tem sua performance totalmente dependente na distribuição dos dados de entrada.
+
+    \section{Bibliografia}
+    \begin{thebibliography}{1}
+        \bibitem{gilberg2004data}
+        GILBERG, R.~F.; FOROUZAN, B.~A. \textit{Data Structures: A Pseudocode Approach with C}. Cengage Learning, 2004.
+    \end{thebibliography}
     
 \end{document}
