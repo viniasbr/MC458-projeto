@@ -8,6 +8,7 @@
 \usepackage[brazilian]{babel}
 \usepackage{enumitem}
 \usepackage{booktabs}
+\usepackage{hyperref}
 
 \newtheorem{thm}{Teorema}
 \newtheorem{lemma}[thm]{Lema}
@@ -28,7 +29,7 @@
 \begin{document}
     \maketitle
 
-    Nesse projeto, exploraremos duas estruturas de dados que representam matrizes esparsas. Iremos analisar operações e características de cada estrutura, a fim de verificar a eficiência dessas estruturas. Com isso, discutiremos as vantagens e desvantagens das implementações quando comparadas entre si e quando comparadas com representações de matrizes não esparsas. 
+    Nesse projeto, exploraremos duas estruturas de dados que representam matrizes esparsas. Iremos analisar operações e características de cada estrutura, a fim de verificar a eficiência dessas estruturas. Com isso, discutiremos as vantagens e desvantagens das implementações quando comparadas entre si e quando comparadas com representações de matrizes não esparsas. O código está disponível em \url{https://github.com/viniasbr/MC458-projeto}
     
     \section{Descrição das Estruturas}
     \subsection{Estrutura 1 - Hash Table}
@@ -287,7 +288,6 @@
 
     Entre as duas estruturas propostas, existem motivos para usar uma \emph{versus} a outra. Em todas as operações com exceção da \texttt{matmul}, a estrutura baseada em Hash se mostrou experimentalmente mais rápida, mas suas garantias são fracas -- estatisticamente, ela respeita os limites impostos, mas os limites para o pior caso possível são altíssimos comparados à implementação por AVL. Assim, em aplicações de tempo real com necessidade de garantias fortes, é péssima prática utilizar uma estrutura que tem sua performance totalmente dependente na distribuição dos dados de entrada.
 
-    \section{Bibliografia}
     \begin{thebibliography}{1}
         \bibitem{gilberg2004data}
         GILBERG, R.~F.; FOROUZAN, B.~A. \textit{Data Structures: A Pseudocode Approach with C}. Cengage Learning, 2004.
